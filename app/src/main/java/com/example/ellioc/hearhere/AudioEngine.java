@@ -14,7 +14,7 @@ public class AudioEngine extends Thread {
     private static final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     private static final int AUDIOSOURCE = MediaRecorder.AudioSource.CAMCORDER;
 
-   private static int[] mSampleRates = new int[] { 8000, 11025, 22050, 44100 };
+   private static int[] mSampleRates = new int[] { 8000, 11025, 22050, 44100, 48000 };
 
     private volatile int BUFFSIZE = 0;
 
@@ -36,7 +36,7 @@ public class AudioEngine extends Thread {
             for (short audioFormat : new short[] { AudioFormat.ENCODING_PCM_8BIT, AudioFormat.ENCODING_PCM_16BIT }) {
                 for (short channelConfig : new short[] { AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_IN_STEREO }) {
                     try {
-                        Log.i("AudioRecording", "Error in Audio Record");
+                        Log.i("AudioRecording", "Trying: " + "Sample Rate: " + rate + " Format: " + audioFormat + " Channel:" + channelConfig);
                         int bufferSize = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
 
                         if (bufferSize != AudioRecord.ERROR_BAD_VALUE) {
@@ -45,6 +45,9 @@ public class AudioEngine extends Thread {
 
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
                                 return recorder;
+                        }
+                        else{
+                            Log.i("AudioRecording", "Error in Audio Record buffsize");
                         }
                     } catch (Exception e) {
                         Log.i("AudioRecording", "Error in Audio Record");
