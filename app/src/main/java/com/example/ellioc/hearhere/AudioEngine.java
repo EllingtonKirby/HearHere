@@ -1,12 +1,15 @@
 package com.example.ellioc.hearhere;
-import android.app.Activity;
-import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.os.Bundle;
-import android.provider.MediaStore;
+import android.os.Environment;
 import android.util.Log;
+
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.util.ArrayList;
 
 public class AudioEngine extends Thread {
     private static final int SAMPLERATE = 44100;
@@ -14,12 +17,14 @@ public class AudioEngine extends Thread {
     private static final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     private static final int AUDIOSOURCE = MediaRecorder.AudioSource.CAMCORDER;
 
-   private static int[] mSampleRates = new int[] { 8000, 11025, 22050, 44100, 48000 };
+   private static int[] mSampleRates = new int[] { 44100, 8000, 11025, 22050, 48000 };
 
     private volatile int BUFFSIZE = 0;
 
     private boolean isRunning = false;
     private boolean isStarted = false;
+    boolean mExternalStorageAvailable = false;
+    boolean mExternalStorageWriteable = false;
 
     AudioRecord recordInstance = null;
 
@@ -27,21 +32,22 @@ public class AudioEngine extends Thread {
     public AudioEngine() {
         this.isRunning = false;
         this.isStarted = false;
+        isExternalStorageWritable();
         recordInstance = findAudioRecord();
 
     }
 
     public AudioRecord findAudioRecord() {
         for (int rate : mSampleRates) {
-            for (short audioFormat : new short[] { AudioFormat.ENCODING_PCM_8BIT, AudioFormat.ENCODING_PCM_16BIT }) {
-                for (short channelConfig : new short[] { AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_IN_STEREO }) {
+            for (short audioFormat : new short[] { AudioFormat.ENCODING_PCM_16BIT }) {
+                for (short channelConfig : new short[] { AudioFormat.CHANNEL_IN_STEREO }) {
                     try {
                         Log.i("AudioRecording", "Trying: " + "Sample Rate: " + rate + " Format: " + audioFormat + " Channel:" + channelConfig);
-                        int bufferSize = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
+                        BUFFSIZE = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
 
-                        if (bufferSize != AudioRecord.ERROR_BAD_VALUE) {
+                        if (BUFFSIZE != AudioRecord.ERROR_BAD_VALUE) {
                             // check if we can instantiate and have a success
-                            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER, rate, channelConfig, audioFormat, bufferSize*2);
+                            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER, rate, channelConfig, audioFormat, BUFFSIZE*2);
 
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
                                 return recorder;
@@ -58,13 +64,43 @@ public class AudioEngine extends Thread {
         return null;
     }
 
+    /* Checks if external storage is available for read and write */
+    public void isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            // We can read and write the media
+            mExternalStorageAvailable = mExternalStorageWriteable = true;
+            Log.i("External Storage", "isExternalStorageWritable: true");
+        } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            // We can only read the media
+            mExternalStorageAvailable = true;
+            mExternalStorageWriteable = false;
+        } else {
+            // Something else is wrong. It may be one of many other states, but all we need
+            //  to know is we can neither read nor write
+            mExternalStorageAvailable = mExternalStorageWriteable = false;
+        }
+    }
+
+    public File getSoundStorageDir() {
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                , "HearHere");
+        if (!file.exists()) {
+            if(!file.mkdirs()) {
+                Log.e("Writing Audio", "Directory not created");
+            }
+        }
+        return file;
+    }
+
     public void start_engine(){
-        if(!isStarted) {
+        if(!isStarted && recordInstance != null) {
             this.isRunning = true;
             this.isStarted = true;
             this.start();
         }
-        else{
+        else if(isStarted && recordInstance == null){
+            recordInstance = findAudioRecord();
             this.isRunning = true;
         }
     }
@@ -72,17 +108,39 @@ public class AudioEngine extends Thread {
     public void stop_engine(){
         this.isRunning = false;
         if(recordInstance != null && recordInstance.getState() == AudioRecord.RECORDSTATE_RECORDING) {
-            recordInstance.stop();
+            recordInstance.release();
+            recordInstance = null;
         }
     }
 
     public void run(){
         try{
-            while(this.isRunning){
-                recordInstance.startRecording();
-                int SIZE = BUFFSIZE;
-                short[] buff = new short[SIZE];
-                recordInstance.read(buff, 0, SIZE);
+            if(mExternalStorageAvailable && mExternalStorageWriteable) {
+                File root = getSoundStorageDir();
+                File toWrite = new File(root, "RecordedAudio");
+
+                FileWriter writer = new FileWriter(toWrite);
+                ArrayList<String> shortList = new ArrayList<>();
+
+                //FileOutputStream fos = new FileOutputStream(toWrite);
+                //DataOutputStream dos = new DataOutputStream(fos);
+                while (this.isRunning) {
+                    recordInstance.startRecording();
+                    short[] buff = new short[BUFFSIZE*2];
+                    recordInstance.read(buff, 0, BUFFSIZE * 2);
+                    for(int i = 0; i < BUFFSIZE * 2; i++) {
+                        //dos.writeShort(buff[i]);
+                        shortList.add(String.valueOf(buff[i]));
+                    }
+                }
+                //dos.close();
+                for(String str : shortList){
+                    writer.write(str);
+                    writer.write("\n");
+                }
+            }
+            else{
+                Log.i("Checking Storage", "run: External Storage Not Available");
             }
         }catch (Exception e){
             e.printStackTrace();

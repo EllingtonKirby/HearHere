@@ -15,6 +15,7 @@ public class MainActivity extends Activity {
 
     private AudioEngine audioEngine = null;
     final int PERMISSIONS_RECORD_AUDIO = 1;
+    final int PERMISSIONS_WRITE_STORAGE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +25,28 @@ public class MainActivity extends Activity {
         if(!hasRecordAudioPermission()){
             requestRecordAudioPermission();
         }
+        else if(!hasWriteExternalStoragePermission())
+            requestWriteExternalStoragePermission();
+
+        bindAudioRecord();
+
     }
+
+    protected void onPause(){
+        super.onPause();
+        if(audioEngine != null) {
+            audioEngine.stop_engine();
+            audioEngine = null;
+        }
+    }
+
+    protected void onResume(){
+        super.onResume();
+        if(audioEngine == null){
+            bindAudioRecord();
+        }
+    }
+
 
     private boolean hasRecordAudioPermission(){
         boolean hasPermission = (ContextCompat.checkSelfPermission(this,
@@ -34,19 +56,41 @@ public class MainActivity extends Activity {
         return hasPermission;
     }
 
+    private boolean hasWriteExternalStoragePermission(){
+        boolean hasPermission = (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+
+        Log.i("Main Activity", "Has WRITE_EXTERNAL_STORAGE permission? " + hasPermission);
+        return hasPermission;
+    }
+
     private void requestRecordAudioPermission(){
 
         String requiredPermission = Manifest.permission.RECORD_AUDIO;
 
         // If the user previously denied this permission then show a message explaining why
         // this permission is needed
-        if (ActivityCompat.shouldShowRequestPermissionRationale(this, requiredPermission)) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
             Toast.makeText(getApplicationContext(), "This app needs to record audio through the microphone....",
                     Toast.LENGTH_SHORT).show();
         }
 
         // request the permission.
         ActivityCompat.requestPermissions(this, new String[]{requiredPermission}, PERMISSIONS_RECORD_AUDIO);
+    }
+
+    private void requestWriteExternalStoragePermission(){
+        String requiredPermission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
+        // If the user previously denied this permission then show a message explaining why
+        // this permission is needed
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Toast.makeText(getApplicationContext(), "This app needs to write to external storage....",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        // request the permission.
+        ActivityCompat.requestPermissions(this, new String[]{requiredPermission}, PERMISSIONS_WRITE_STORAGE);
     }
 
     @Override
@@ -58,6 +102,11 @@ public class MainActivity extends Activity {
             case PERMISSIONS_RECORD_AUDIO:{
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     bindAudioRecord();
+                }
+            }
+            case PERMISSIONS_WRITE_STORAGE:{
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+
                 }
             }
 
