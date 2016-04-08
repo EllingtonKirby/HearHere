@@ -4,10 +4,13 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -22,31 +25,37 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(!hasRecordAudioPermission()){
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if(!hasRecordAudioPermission())
             requestRecordAudioPermission();
-        }
-        else if(!hasWriteExternalStoragePermission())
+        else
+            bindAudioRecord();
+        if(!hasWriteExternalStoragePermission())
             requestWriteExternalStoragePermission();
+    }
 
+    @Override
+    protected void onPause(){
+        super.onPause();
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        stopAudioEngine();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         bindAudioRecord();
 
     }
 
-    protected void onPause(){
-        super.onPause();
-        if(audioEngine != null) {
-            audioEngine.stop_engine();
-            audioEngine = null;
-        }
+    @Override
+    protected void onStop(){
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        stopAudioEngine();
+        this.finish();
+        super.onStop();
     }
-
-    protected void onResume(){
-        super.onResume();
-        if(audioEngine == null){
-            bindAudioRecord();
-        }
-    }
-
 
     private boolean hasRecordAudioPermission(){
         boolean hasPermission = (ContextCompat.checkSelfPermission(this,
@@ -106,15 +115,22 @@ public class MainActivity extends Activity {
             }
             case PERMISSIONS_WRITE_STORAGE:{
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-
+                    //TODO implement logging functionality to make logging a settable option
                 }
             }
 
         }
     }
 
-    public void bindAudioRecord(){
+    public void startAudioEngine(){
         audioEngine = new AudioEngine();
+        audioEngine.start_engine();
+    }
+
+    public void stopAudioEngine(){
+        audioEngine.stop_engine();
+    }
+    public void bindAudioRecord(){
         final Button button1 = (Button) findViewById(R.id.button1);
         final Button button2 = (Button) findViewById(R.id.button2);
         button2.setVisibility(View.INVISIBLE);
@@ -122,7 +138,7 @@ public class MainActivity extends Activity {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        audioEngine.start_engine();
+                        startAudioEngine();
                         button1.setVisibility(View.INVISIBLE);
                         button2.setVisibility(View.VISIBLE);
                     }
@@ -132,11 +148,23 @@ public class MainActivity extends Activity {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        audioEngine.stop_engine();
+                        stopAudioEngine();
                         button1.setVisibility(View.VISIBLE);
                         button2.setVisibility(View.INVISIBLE);
                     }
                 }
         );
     }
+
+    /**
+     * TODO Need to implement Handler to receive input to change UI
+     *
+    public Handler mhandle = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+
+        }
+
+    };
+     **/
 }

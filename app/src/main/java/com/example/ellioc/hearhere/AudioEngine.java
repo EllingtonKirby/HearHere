@@ -22,7 +22,6 @@ public class AudioEngine extends Thread {
     private volatile int BUFFSIZE = 0;
 
     private boolean isRunning = false;
-    private boolean isStarted = false;
     boolean mExternalStorageAvailable = false;
     boolean mExternalStorageWriteable = false;
 
@@ -31,7 +30,6 @@ public class AudioEngine extends Thread {
 
     public AudioEngine() {
         this.isRunning = false;
-        this.isStarted = false;
         isExternalStorageWritable();
         recordInstance = findAudioRecord();
 
@@ -94,23 +92,12 @@ public class AudioEngine extends Thread {
     }
 
     public void start_engine(){
-        if(!isStarted && recordInstance != null) {
             this.isRunning = true;
-            this.isStarted = true;
             this.start();
-        }
-        else if(isStarted && recordInstance == null){
-            recordInstance = findAudioRecord();
-            this.isRunning = true;
-        }
     }
 
     public void stop_engine(){
-        this.isRunning = false;
-        if(recordInstance != null && recordInstance.getState() == AudioRecord.RECORDSTATE_RECORDING) {
-            recordInstance.release();
-            recordInstance = null;
-        }
+        recordInstance = null;
     }
 
     public void run(){
@@ -121,29 +108,31 @@ public class AudioEngine extends Thread {
 
                 FileWriter writer = new FileWriter(toWrite);
                 ArrayList<String> shortList = new ArrayList<>();
+                recordInstance.startRecording();
 
-                //FileOutputStream fos = new FileOutputStream(toWrite);
-                //DataOutputStream dos = new DataOutputStream(fos);
                 while (this.isRunning) {
-                    recordInstance.startRecording();
                     short[] buff = new short[BUFFSIZE*2];
                     recordInstance.read(buff, 0, BUFFSIZE * 2);
                     for(int i = 0; i < BUFFSIZE * 2; i++) {
-                        //dos.writeShort(buff[i]);
                         shortList.add(String.valueOf(buff[i]));
                     }
                 }
-                //dos.close();
-                for(String str : shortList){
-                    writer.write(str);
-                    writer.write("\n");
-                }
+                //for(String str : shortList){
+                //    writer.write(str);
+                //    writer.write("\n");
+                //}
+
             }
             else{
                 Log.i("Checking Storage", "run: External Storage Not Available");
             }
         }catch (Exception e){
             e.printStackTrace();
+        }
+        if(recordInstance != null){
+            recordInstance.stop();
+            recordInstance.release();
+            recordInstance = null;
         }
     }
 }
