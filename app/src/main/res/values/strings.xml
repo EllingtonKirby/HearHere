@@ -2,5 +2,6 @@
     <string name="app_name">HearHere</string>
     <string name="button_text1">listen</string>
     <string name="button_text2">stop</string>
+    <string name="tappingImage">Appears On Tap</string>
 
 </resources>

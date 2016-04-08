@@ -38,7 +38,9 @@ public class MainActivity extends Activity {
     protected void onPause(){
         super.onPause();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        stopAudioEngine();
+        if(audioEngine != null) {
+            stopAudioEngine();
+        }
     }
 
     @Override
@@ -52,7 +54,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop(){
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        stopAudioEngine();
+        if(audioEngine != null)
+            stopAudioEngine();
         this.finish();
         super.onStop();
     }
