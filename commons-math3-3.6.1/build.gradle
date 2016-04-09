@@ -1,0 +1,4 @@
+configurations.create("default")
+artifacts.add("default", file('commons-math3-3.6.1.jar'))
+dependencies {
+}

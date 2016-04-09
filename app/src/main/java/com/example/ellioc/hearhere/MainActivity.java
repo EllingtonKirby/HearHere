@@ -26,12 +26,13 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if(!hasWriteExternalStoragePermission())
+            requestWriteExternalStoragePermission();
         if(!hasRecordAudioPermission())
             requestRecordAudioPermission();
         else
             bindAudioRecord();
-        if(!hasWriteExternalStoragePermission())
-            requestWriteExternalStoragePermission();
+
     }
 
     @Override
@@ -133,6 +134,7 @@ public class MainActivity extends Activity {
     public void stopAudioEngine(){
         audioEngine.stop_engine();
     }
+
     public void bindAudioRecord(){
         final Button button1 = (Button) findViewById(R.id.button1);
         final Button button2 = (Button) findViewById(R.id.button2);
