@@ -12,14 +12,13 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 
 public class AudioEngine extends Thread {
-    private static final int SAMPLERATE = 44100;
+    private static int SAMPLERATE = 0;
     private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
     private static final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     private static final int AUDIOSOURCE = MediaRecorder.AudioSource.CAMCORDER;
     private static final double THRESHOLD = 1000000000;
 
     private static int[] mSampleRates = new int[] { 44100, 8000, 11025, 22050, 48000 };
-
     private volatile int BUFFSIZE = 0;
 
     private boolean isRunning = false;
@@ -48,6 +47,7 @@ public class AudioEngine extends Thread {
                             AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER, rate, channelConfig, audioFormat, BUFFSIZE*2);
 
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
+                                SAMPLERATE = rate;
                                 return recorder;
                         }
                         else{
@@ -114,8 +114,8 @@ public class AudioEngine extends Thread {
 
                 while (this.isRunning) {
                     short[] buff = new short[2*READ_2MS];
-                    double[] left = new double[READ_2MS];
-                    double[] right = new double[READ_2MS];
+                    double[] left = new double[13*READ_2MS];
+                    double[] right = new double[13*READ_2MS];
                     int accumL = 0;
                     int accumR = 0;
                     recordInstance.read(buff, 0,  2*READ_2MS);
@@ -126,13 +126,23 @@ public class AudioEngine extends Thread {
                         else{
                             right[i/2] = buff[i];
                         }
+                        shortList.add(String.valueOf(buff[i]));
                     }
                     for(int i = 0; i < READ_2MS; i++){
                         accumL += Math.pow(left[i], 2);
                         accumR += Math.pow(right[i], 2);
                     }
-                    shortList.add(String.valueOf(accumL));
                     if(accumL > THRESHOLD){
+                        short[] fullSound = new short[24 * READ_2MS];
+                        recordInstance.read(fullSound, 0, 24*READ_2MS);
+                        for(int i = 0; i <  24*READ_2MS; i++) {
+                            if(i % 2 == 0){
+                                left[i/2] = fullSound[i];
+                            }
+                            else{
+                                right[i/2] = fullSound[i];
+                            }
+                        }
                         double[] xCorrelation = DSP.xcorr(left, right);
                         double max = xCorrelation[0];
                         for(double weight : xCorrelation){
@@ -141,12 +151,16 @@ public class AudioEngine extends Thread {
                                 max = weight;
                             }
                         }
+                        Log.i("Max: ", "max is: " + max);
+                        double TDoA = (1/SAMPLERATE) * (max);
+                        Log.i("TDoA: ", "TDoA is: " + TDoA);
                         //TODO use the cross correlation here to compute TDoA
                     }
                 }
-                for(String str : shortList){
-                    writer.write(str + "\n");
-                }
+                //for(String str : shortList){
+                //    writer.write(str);
+                //    writer.write("\n");
+                //}
 
             }
             else{
