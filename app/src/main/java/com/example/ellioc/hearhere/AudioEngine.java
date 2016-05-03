@@ -134,7 +134,8 @@ public class AudioEngine extends Thread {
                     }
                     if(accumL > THRESHOLD){
                         short[] fullSound = new short[24 * READ_2MS];
-                        recordInstance.read(fullSound, 0, 24*READ_2MS);
+                        System.arraycopy(buff, 0, fullSound, 0, buff.length);
+                        recordInstance.read(fullSound, 2*READ_2MS+1, 22*READ_2MS);
                         for(int i = 0; i <  24*READ_2MS; i++) {
                             if(i % 2 == 0){
                                 left[i/2] = fullSound[i];
@@ -145,16 +146,15 @@ public class AudioEngine extends Thread {
                         }
                         double[] xCorrelation = DSP.xcorr(left, right);
                         double max = xCorrelation[0];
+
                         for(double weight : xCorrelation){
-                            Log.i("Logging", "Correlation: " + weight);
                             if(weight > max){
                                 max = weight;
                             }
                         }
                         Log.i("Max: ", "max is: " + max);
-                        double TDoA = (1/SAMPLERATE) * (max);
+                        double TDoA = (1/SAMPLERATE) * (max - xCorrelation.length);
                         Log.i("TDoA: ", "TDoA is: " + TDoA);
-                        //TODO use the cross correlation here to compute TDoA
                     }
                 }
                 //for(String str : shortList){
