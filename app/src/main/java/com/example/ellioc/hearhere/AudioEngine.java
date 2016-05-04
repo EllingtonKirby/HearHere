@@ -135,7 +135,7 @@ public class AudioEngine extends Thread {
                     if(accumL > THRESHOLD){
                         short[] fullSound = new short[24 * READ_2MS];
                         System.arraycopy(buff, 0, fullSound, 0, buff.length);
-                        recordInstance.read(fullSound, 2*READ_2MS+1, 22*READ_2MS);
+                        recordInstance.read(fullSound, 2*READ_2MS, 22*READ_2MS);
                         for(int i = 0; i <  24*READ_2MS; i++) {
                             if(i % 2 == 0){
                                 left[i/2] = fullSound[i];
