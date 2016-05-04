@@ -19,6 +19,22 @@ public class MainActivity extends Activity {
     private AudioEngine audioEngine = null;
     final int PERMISSIONS_RECORD_AUDIO = 1;
     final int PERMISSIONS_WRITE_STORAGE = 2;
+    /**
+     * TODO Need to implement Handler to receive input to change UI
+
+     **/
+    public Handler mhandle = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+
+                default :
+                    super.handleMessage(msg);
+                    break;
+            }
+        }
+
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,7 +143,7 @@ public class MainActivity extends Activity {
     }
 
     public void startAudioEngine(){
-        audioEngine = new AudioEngine();
+        audioEngine = new AudioEngine(mhandle);
         audioEngine.start_engine();
     }
 
@@ -161,15 +177,5 @@ public class MainActivity extends Activity {
         );
     }
 
-    /**
-     * TODO Need to implement Handler to receive input to change UI
-     *
-    public Handler mhandle = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
 
-        }
-
-    };
-     **/
 }

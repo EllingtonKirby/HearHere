@@ -4,10 +4,8 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.util.Log;
-
-import java.io.DataOutputStream;
+import android.os.Handler;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.util.ArrayList;
 
@@ -21,13 +19,18 @@ public class AudioEngine extends Thread {
     private static int[] mSampleRates = new int[] { 44100, 8000, 11025, 22050, 48000 };
     private volatile int BUFFSIZE = 0;
 
+    private int TOP_LEFT_MSG = 1;
+    private int BOT_LEFT_MSG = 2;
+    private int TOP_RIGHT_MSG = 3;
+    private int BOT_RIGHT_MSG = 4;
+
     private boolean isRunning = false;
     boolean mExternalStorageAvailable = false;
     boolean mExternalStorageWriteable = false;
 
     AudioRecord recordInstance = null;
 
-    public AudioEngine() {
+    public AudioEngine(Handler mhandle) {
         this.isRunning = false;
         isExternalStorageWritable();
         recordInstance = findAudioRecord();
@@ -155,6 +158,9 @@ public class AudioEngine extends Thread {
                         Log.i("Max: ", "max is: " + max);
                         double TDoA = (1/SAMPLERATE) * (max - xCorrelation.length);
                         Log.i("TDoA: ", "TDoA is: " + TDoA);
+
+                        //msg = mHandle.obtainMessage(MAXOVER_MSG, mMaxValue);
+                        //mHandle.sendMessage(msg);
                     }
                 }
                 //for(String str : shortList){
