@@ -16,7 +16,7 @@ public class AudioEngine extends Thread {
     private static final int AUDIOSOURCE = MediaRecorder.AudioSource.CAMCORDER;
     private static final double THRESHOLD = 1000000000;
 
-    private static int[] mSampleRates = new int[] { 44100, 8000, 11025, 22050, 48000 };
+    private static int[] mSampleRates = new int[] { 48000, 44100, 8000, 11025, 22050};
     private volatile int BUFFSIZE = 0;
 
     private int TOP_LEFT_MSG = 1;
@@ -119,23 +119,15 @@ public class AudioEngine extends Thread {
                     short[] buff = new short[2*READ_2MS];
                     double[] left = new double[13*READ_2MS];
                     double[] right = new double[13*READ_2MS];
-                    int accumL = 0;
-                    int accumR = 0;
+                    int accum = 0;
                     recordInstance.read(buff, 0,  2*READ_2MS);
                     for(int i = 0; i <  2*READ_2MS; i++) {
                         if(i % 2 == 0){
-                            left[i/2] = buff[i];
-                        }
-                        else{
-                            right[i/2] = buff[i];
+                            accum += Math.pow(buff[i], 2);
                         }
                         shortList.add(String.valueOf(buff[i]));
                     }
-                    for(int i = 0; i < READ_2MS; i++){
-                        accumL += Math.pow(left[i], 2);
-                        accumR += Math.pow(right[i], 2);
-                    }
-                    if(accumL > THRESHOLD){
+                    if(accum > THRESHOLD){
                         short[] fullSound = new short[24 * READ_2MS];
                         System.arraycopy(buff, 0, fullSound, 0, buff.length);
                         recordInstance.read(fullSound, 2*READ_2MS, 22*READ_2MS);
@@ -156,7 +148,7 @@ public class AudioEngine extends Thread {
                             }
                         }
                         Log.i("Max: ", "max is: " + max);
-                        double TDoA = (1/SAMPLERATE) * (max - xCorrelation.length);
+                        double TDoA = (1/(double) SAMPLERATE) * (max - xCorrelation.length);
                         Log.i("TDoA: ", "TDoA is: " + TDoA);
 
                         //msg = mHandle.obtainMessage(MAXOVER_MSG, mMaxValue);
