@@ -3,8 +3,11 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Environment;
+import android.os.Message;
 import android.util.Log;
 import android.os.Handler;
+
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -16,7 +19,7 @@ public class AudioEngine extends Thread {
     private static final int AUDIOSOURCE = MediaRecorder.AudioSource.CAMCORDER;
     private static final double THRESHOLD = 1000000000;
 
-    private static int[] mSampleRates = new int[] { 48000, 44100, 8000, 11025, 22050};
+    private static int[] mSampleRates = new int[] { 48000, 8000, 11025, 22050, 44100 };
     private volatile int BUFFSIZE = 0;
 
     private int TOP_LEFT_MSG = 1;
@@ -24,14 +27,20 @@ public class AudioEngine extends Thread {
     private int TOP_RIGHT_MSG = 3;
     private int BOT_RIGHT_MSG = 4;
 
+    private int LEFT_DIVIDER = 14;
+    private int RIGHT_DIVIDER = -17;
+
+
     private boolean isRunning = false;
     boolean mExternalStorageAvailable = false;
     boolean mExternalStorageWriteable = false;
 
     AudioRecord recordInstance = null;
+    Handler mhandle = null;
 
     public AudioEngine(Handler mhandle) {
         this.isRunning = false;
+        this.mhandle = mhandle;
         isExternalStorageWritable();
         recordInstance = findAudioRecord();
 
@@ -103,6 +112,18 @@ public class AudioEngine extends Thread {
         isRunning = false;
     }
 
+    public double[] smooth(double[] input){
+        final int windowSize = 5;
+        double[] output = new double[input.length];
+        double SMAy = 0;
+        for(int i = windowSize; i < input.length; i++){
+            SMAy = SMAy + (input[i]/windowSize) - (input[i-windowSize]/windowSize);
+            output[i-windowSize] = SMAy;
+        }
+
+        return output;
+    }
+
     public void run(){
         try{
             if(mExternalStorageAvailable && mExternalStorageWriteable) {
@@ -110,55 +131,137 @@ public class AudioEngine extends Thread {
                 File toWrite = new File(root, "RecordedAudio");
 
                 FileWriter writer = new FileWriter(toWrite);
-                ArrayList<String> shortList = new ArrayList<>();
+                BufferedWriter bufferedWriter = new BufferedWriter(writer);
+                ArrayList<String> leftList = new ArrayList<>();
+                ArrayList<String> rightList = new ArrayList<>();
+                ArrayList<String> corrList = new ArrayList<>();
 
                 final int READ_2MS = 96;
                 recordInstance.startRecording();
 
                 while (this.isRunning) {
-                    short[] buff = new short[2*READ_2MS];
-                    double[] left = new double[13*READ_2MS];
-                    double[] right = new double[13*READ_2MS];
-                    int accum = 0;
-                    recordInstance.read(buff, 0,  2*READ_2MS);
-                    for(int i = 0; i <  2*READ_2MS; i++) {
-                        if(i % 2 == 0){
-                            accum += Math.pow(buff[i], 2);
+                    short[] buff = new short[4 * READ_2MS];
+                    double[] left = new double[2 * READ_2MS];
+                    double[] right = new double[2 * READ_2MS];
+
+                    double[] leftVariable = new double[12 * READ_2MS];
+                    double[] rightVariable = new double[12 * READ_2MS];
+                    boolean metVal = false;
+                    recordInstance.read(buff, 0,  4*READ_2MS);
+                    for(int i = 0; i <  4*READ_2MS; i++) {
+                        if(i % 2 == 0) {
+                            if (Math.abs(buff[i]) > 1500) {
+                                metVal = true;
+                                break;
+                            }
                         }
-                        shortList.add(String.valueOf(buff[i]));
                     }
-                    if(accum > THRESHOLD){
-                        short[] fullSound = new short[24 * READ_2MS];
-                        System.arraycopy(buff, 0, fullSound, 0, buff.length);
-                        recordInstance.read(fullSound, 2*READ_2MS, 22*READ_2MS);
-                        for(int i = 0; i <  24*READ_2MS; i++) {
-                            if(i % 2 == 0){
-                                left[i/2] = fullSound[i];
+                    if(metVal){
+                        boolean foundPeak = false;
+                        short[] validationBuffer = new short[20 * READ_2MS];
+                        recordInstance.read(validationBuffer, 0, 20 * READ_2MS);
+                        int maxAmp = 0;
+                        for(int i = 0; i < validationBuffer.length; i++){
+                            if(Math.abs(validationBuffer[i]) > maxAmp){
+                                maxAmp = Math.abs(validationBuffer[i]);
+                            }
+                            if (i % 2 ==0){
+                                if( Math.abs(validationBuffer[i]) > 10000) {
+                                    foundPeak = true;
+//                                    break;
+                                }
+                            }
+                        }
+                        if(foundPeak){
+                            for(int i = 0; i < buff.length; i++){
+                                if(i % 2 == 0){
+                                    left[i/2] = buff[i];
+                                    leftVariable[i/2] = buff[i];
+                                }
+                                else{
+                                    right[i/2] = buff[i];
+                                    rightVariable[i/2] = buff[i];
+                                }
+                            }
+                            //Create variable length buffers for both left and right microphones
+                            for(int i = buff.length; i < buff.length + validationBuffer.length; i++){
+                                if(i % 2 == 0){
+                                    leftVariable[i/2] = validationBuffer[i - buff.length];
+                                }
+                                else{
+                                    rightVariable[i/2] = validationBuffer[i - buff.length];
+                                }
+                            }
+                            for(int i = 0; i < leftVariable.length; i++){
+                                leftList.add(String.valueOf(leftVariable[i]));
+                                rightList.add(String.valueOf(rightVariable[i]));
+                            }
+
+                            //Cross correlation for identical sized buffers
+                            double[] xCorrelation = DSP.xcorr(left, right);
+                            double max = xCorrelation[0];
+
+                            double[] xCorrFull = DSP.xcorr(leftVariable, rightVariable);
+                            double maxFull = xCorrFull[0];
+
+                            int index = 0;
+                            int location = 0;
+                            int indexFull = 0;
+                            int locationFull = 0;
+                            for(double weight : xCorrelation){
+                                corrList.add(String.valueOf(weight));
+                                if(weight > max){
+                                    max = weight;
+                                    location = index;
+                                }
+                                index++;
+                            }
+
+
+                            for(double weight : xCorrFull){
+                                if (weight > maxFull){
+                                    maxFull = weight;
+                                    locationFull = indexFull;
+                                }
+                                indexFull++;
+                            }
+                            Log.i("Max Amplitude: ", "max is: " + maxAmp);
+                            double TDoA = (1/(double)SAMPLERATE) * (max - xCorrelation.length);
+                            double TDoAFull = (1/(double)SAMPLERATE) * (maxFull - xCorrFull.length);
+
+                            location = location - left.length;
+                            locationFull = locationFull - leftVariable.length;
+                            Log.i("Index: ", " full index is " + locationFull);
+                            Message msg = null;
+                            if(locationFull < 0){
+                                //RIGHT
+                                if(locationFull > RIGHT_DIVIDER){
+                                    msg = mhandle.obtainMessage(TOP_RIGHT_MSG, locationFull);
+                                }
+                                else{
+                                    msg = mhandle.obtainMessage(BOT_RIGHT_MSG, locationFull);
+                                }
                             }
                             else{
-                                right[i/2] = fullSound[i];
+                                //LEFT
+                                if(locationFull < LEFT_DIVIDER){
+                                    msg = mhandle.obtainMessage(TOP_LEFT_MSG, locationFull);
+                                }
+                                else{
+                                    msg = mhandle.obtainMessage(BOT_LEFT_MSG, locationFull);
+                                }
                             }
+                            mhandle.sendMessage(msg);
+                            Thread.sleep(1200);
                         }
-                        double[] xCorrelation = DSP.xcorr(left, right);
-                        double max = xCorrelation[0];
-
-                        for(double weight : xCorrelation){
-                            if(weight > max){
-                                max = weight;
-                            }
-                        }
-                        Log.i("Max: ", "max is: " + max);
-                        double TDoA = (1/(double) SAMPLERATE) * (max - xCorrelation.length);
-                        Log.i("TDoA: ", "TDoA is: " + TDoA);
-
-                        //msg = mHandle.obtainMessage(MAXOVER_MSG, mMaxValue);
-                        //mHandle.sendMessage(msg);
                     }
                 }
-                //for(String str : shortList){
-                //    writer.write(str);
-                //    writer.write("\n");
-                //}
+                int j = 0;
+                for(int i = 0; i < leftList.size() / 2; i++){
+                    bufferedWriter.write(leftList.get(i) + "\t" + rightList.get(i));
+                    bufferedWriter.newLine();
+                }
+                bufferedWriter.close();
 
             }
             else{

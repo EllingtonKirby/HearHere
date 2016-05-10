@@ -3,6 +3,8 @@ package com.example.ellioc.hearhere;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -12,13 +14,28 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.MediaController;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
     private AudioEngine audioEngine = null;
+    private MediaPlayer mPlayer = null;
     final int PERMISSIONS_RECORD_AUDIO = 1;
     final int PERMISSIONS_WRITE_STORAGE = 2;
+
+    private static final int TOP_LEFT_MSG = 1;
+    private static final int BOT_LEFT_MSG = 2;
+    private static final int TOP_RIGHT_MSG = 3;
+    private static final int BOT_RIGHT_MSG = 4;
+
+
+    private ImageView topRight = null;
+    private ImageView botRight = null;
+    private ImageView topLeft = null;
+    private ImageView botLeft = null;
+
     /**
      * TODO Need to implement Handler to receive input to change UI
 
@@ -26,12 +43,55 @@ public class MainActivity extends Activity {
     public Handler mhandle = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what) {
 
+            switch (msg.what) {
+                case TOP_LEFT_MSG:
+                    topLeft.setVisibility(View.INVISIBLE);
+                    mPlayer = MediaPlayer.create(MainActivity.this, R.raw.snare);
+
+                    topLeft.postDelayed(new Runnable(){
+                        @Override
+                        public void run(){
+                            topLeft.setVisibility(View.VISIBLE);
+                        }
+                    }, 500);
+                    break;
+                case BOT_LEFT_MSG:
+                    botLeft.setVisibility(View.INVISIBLE);
+                    mPlayer = MediaPlayer.create(MainActivity.this, R.raw.crash);
+                    botLeft.postDelayed(new Runnable(){
+                        @Override
+                        public void run(){
+                            botLeft.setVisibility(View.VISIBLE);
+                        }
+                    }, 500);
+                    break;
+                case TOP_RIGHT_MSG:
+                    topRight.setVisibility(View.INVISIBLE);
+                    mPlayer = MediaPlayer.create(MainActivity.this, R.raw.kick);
+                    topRight.postDelayed(new Runnable(){
+                        @Override
+                        public void run(){
+                            topRight.setVisibility(View.VISIBLE);
+                        }
+                    }, 500);
+                    break;
+                case BOT_RIGHT_MSG:
+                    botRight.setVisibility(View.INVISIBLE);
+                    mPlayer = MediaPlayer.create(MainActivity.this, R.raw.hat);
+                    botRight.postDelayed(new Runnable(){
+                        @Override
+                        public void run(){
+                            botRight.setVisibility(View.VISIBLE);
+                        }
+                    }, 500);
+                    break;
                 default :
                     super.handleMessage(msg);
                     break;
             }
+            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mPlayer.start();
         }
 
     };
@@ -40,14 +100,26 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         if(!hasWriteExternalStoragePermission())
             requestWriteExternalStoragePermission();
         if(!hasRecordAudioPermission())
             requestRecordAudioPermission();
-        else
+        else{
+            topRight = (ImageView) findViewById(R.id.topRight);
+            botRight = (ImageView) findViewById(R.id.botRight);
+            topLeft = (ImageView) findViewById(R.id.topLeft);
+            botLeft = (ImageView) findViewById(R.id.botLeft);
+
+            topLeft.setBackgroundColor(0xFFFF00);
+            botLeft.setBackgroundColor(0xFFFF00);
+            topRight.setBackgroundColor(0xFFFF00);
+            botRight.setBackgroundColor(0xFFFF00);
             bindAudioRecord();
+        }
+
+
 
     }
 
@@ -154,6 +226,7 @@ public class MainActivity extends Activity {
     public void bindAudioRecord(){
         final Button button1 = (Button) findViewById(R.id.button1);
         final Button button2 = (Button) findViewById(R.id.button2);
+
         button2.setVisibility(View.INVISIBLE);
         button1.setOnClickListener(
                 new View.OnClickListener() {
