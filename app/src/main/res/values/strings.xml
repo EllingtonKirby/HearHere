@@ -3,5 +3,7 @@
     <string name="button_text1">listen</string>
     <string name="button_text2">stop</string>
     <string name="tappingImage">Appears On Tap</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="calibrate">Calibrate</string>
 
 </resources>

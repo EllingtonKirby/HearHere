@@ -22,13 +22,8 @@ public class AudioEngine extends Thread {
     private static int[] mSampleRates = new int[] { 48000, 8000, 11025, 22050, 44100 };
     private volatile int BUFFSIZE = 0;
 
-    private int TOP_LEFT_MSG = 1;
-    private int BOT_LEFT_MSG = 2;
-    private int TOP_RIGHT_MSG = 3;
-    private int BOT_RIGHT_MSG = 4;
-
-    private int LEFT_DIVIDER = 14;
-    private int RIGHT_DIVIDER = -17;
+    private int LEFT_DIVIDER = 0;
+    private int RIGHT_DIVIDER = 0;
 
 
     private boolean isRunning = false;
@@ -38,10 +33,12 @@ public class AudioEngine extends Thread {
     AudioRecord recordInstance = null;
     Handler mhandle = null;
 
-    public AudioEngine(Handler mhandle) {
+    public AudioEngine(Handler mhandle, int LEFT_DIVIDER, int RIGHT_DIVIDER) {
         this.isRunning = false;
         this.mhandle = mhandle;
         isExternalStorageWritable();
+        this.LEFT_DIVIDER = LEFT_DIVIDER;
+        this.RIGHT_DIVIDER = RIGHT_DIVIDER;
         recordInstance = findAudioRecord();
 
     }
@@ -127,22 +124,22 @@ public class AudioEngine extends Thread {
     public void run(){
         try{
             if(mExternalStorageAvailable && mExternalStorageWriteable) {
-                File root = getSoundStorageDir();
-                File toWrite = new File(root, "RecordedAudio");
-
-                FileWriter writer = new FileWriter(toWrite);
-                BufferedWriter bufferedWriter = new BufferedWriter(writer);
-                ArrayList<String> leftList = new ArrayList<>();
-                ArrayList<String> rightList = new ArrayList<>();
-                ArrayList<String> corrList = new ArrayList<>();
+//                File root = getSoundStorageDir();
+//                File toWrite = new File(root, "RecordedAudio");
+//
+//                FileWriter writer = new FileWriter(toWrite);
+//                BufferedWriter bufferedWriter = new BufferedWriter(writer);
+//                ArrayList<String> leftList = new ArrayList<>();
+//                ArrayList<String> rightList = new ArrayList<>();
+//                ArrayList<String> corrList = new ArrayList<>();
 
                 final int READ_2MS = 96;
                 recordInstance.startRecording();
 
                 while (this.isRunning) {
                     short[] buff = new short[4 * READ_2MS];
-                    double[] left = new double[2 * READ_2MS];
-                    double[] right = new double[2 * READ_2MS];
+//                    double[] left = new double[2 * READ_2MS];
+//                    double[] right = new double[2 * READ_2MS];
 
                     double[] leftVariable = new double[12 * READ_2MS];
                     double[] rightVariable = new double[12 * READ_2MS];
@@ -160,26 +157,22 @@ public class AudioEngine extends Thread {
                         boolean foundPeak = false;
                         short[] validationBuffer = new short[20 * READ_2MS];
                         recordInstance.read(validationBuffer, 0, 20 * READ_2MS);
-                        int maxAmp = 0;
                         for(int i = 0; i < validationBuffer.length; i++){
-                            if(Math.abs(validationBuffer[i]) > maxAmp){
-                                maxAmp = Math.abs(validationBuffer[i]);
-                            }
                             if (i % 2 ==0){
                                 if( Math.abs(validationBuffer[i]) > 10000) {
                                     foundPeak = true;
-//                                    break;
+                                    break;
                                 }
                             }
                         }
                         if(foundPeak){
                             for(int i = 0; i < buff.length; i++){
                                 if(i % 2 == 0){
-                                    left[i/2] = buff[i];
+//                                    left[i/2] = buff[i];
                                     leftVariable[i/2] = buff[i];
                                 }
                                 else{
-                                    right[i/2] = buff[i];
+//                                    right[i/2] = buff[i];
                                     rightVariable[i/2] = buff[i];
                                 }
                             }
@@ -192,30 +185,30 @@ public class AudioEngine extends Thread {
                                     rightVariable[i/2] = validationBuffer[i - buff.length];
                                 }
                             }
-                            for(int i = 0; i < leftVariable.length; i++){
-                                leftList.add(String.valueOf(leftVariable[i]));
-                                rightList.add(String.valueOf(rightVariable[i]));
-                            }
+//                            for(int i = 0; i < leftVariable.length; i++){
+//                                leftList.add(String.valueOf(leftVariable[i]));
+//                                rightList.add(String.valueOf(rightVariable[i]));
+//                            }
 
-                            //Cross correlation for identical sized buffers
-                            double[] xCorrelation = DSP.xcorr(left, right);
-                            double max = xCorrelation[0];
+//                            //Cross correlation for identical sized buffers
+//                            double[] xCorrelation = DSP.xcorr(left, right);
+//                            double max = xCorrelation[0];
 
                             double[] xCorrFull = DSP.xcorr(leftVariable, rightVariable);
                             double maxFull = xCorrFull[0];
 
-                            int index = 0;
-                            int location = 0;
+//                            int index = 0;
+//                            int location = 0;
                             int indexFull = 0;
                             int locationFull = 0;
-                            for(double weight : xCorrelation){
-                                corrList.add(String.valueOf(weight));
-                                if(weight > max){
-                                    max = weight;
-                                    location = index;
-                                }
-                                index++;
-                            }
+//                            for(double weight : xCorrelation){
+////                                corrList.add(String.valueOf(weight));
+//                                if(weight > max){
+//                                    max = weight;
+//                                    location = index;
+//                                }
+//                                index++;
+//                            }
 
 
                             for(double weight : xCorrFull){
@@ -225,14 +218,18 @@ public class AudioEngine extends Thread {
                                 }
                                 indexFull++;
                             }
-                            Log.i("Max Amplitude: ", "max is: " + maxAmp);
-                            double TDoA = (1/(double)SAMPLERATE) * (max - xCorrelation.length);
-                            double TDoAFull = (1/(double)SAMPLERATE) * (maxFull - xCorrFull.length);
-
-                            location = location - left.length;
+//                            double TDoA = (1/(double)SAMPLERATE) * (max - xCorrelation.length);
+//                            double TDoAFull = (1/(double)SAMPLERATE) * (maxFull - xCorrFull.length);
+//
+//                            location = location - left.length;
                             locationFull = locationFull - leftVariable.length;
                             Log.i("Index: ", " full index is " + locationFull);
-                            Message msg = null;
+                            Message msg;
+
+                            int TOP_LEFT_MSG = 1;
+                            int BOT_LEFT_MSG = 2;
+                            int TOP_RIGHT_MSG = 3;
+                            int BOT_RIGHT_MSG = 4;
                             if(locationFull < 0){
                                 //RIGHT
                                 if(locationFull > RIGHT_DIVIDER){
@@ -256,13 +253,12 @@ public class AudioEngine extends Thread {
                         }
                     }
                 }
-                int j = 0;
-                for(int i = 0; i < leftList.size() / 2; i++){
-                    bufferedWriter.write(leftList.get(i) + "\t" + rightList.get(i));
-                    bufferedWriter.newLine();
-                }
-                bufferedWriter.close();
-
+//                int j = 0;
+//                for(int i = 0; i < leftList.size() / 2; i++){
+//                    bufferedWriter.write(leftList.get(i) + "\t" + rightList.get(i));
+//                    bufferedWriter.newLine();
+//                }
+//                bufferedWriter.close();
             }
             else{
                 Log.i("Checking Storage", "run: External Storage Not Available");
