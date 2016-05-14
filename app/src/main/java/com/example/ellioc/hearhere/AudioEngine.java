@@ -13,18 +13,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 
 public class AudioEngine extends Thread {
-    private static int SAMPLERATE = 0;
-    private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
-    private static final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
-    private static final int AUDIOSOURCE = MediaRecorder.AudioSource.CAMCORDER;
-    private static final double THRESHOLD = 1000000000;
-
     private static int[] mSampleRates = new int[] { 48000, 8000, 11025, 22050, 44100 };
-    private volatile int BUFFSIZE = 0;
-
-    private int LEFT_DIVIDER = 0;
-    private int RIGHT_DIVIDER = 0;
-
 
     private boolean isRunning = false;
     boolean mExternalStorageAvailable = false;
@@ -33,12 +22,10 @@ public class AudioEngine extends Thread {
     AudioRecord recordInstance = null;
     Handler mhandle = null;
 
-    public AudioEngine(Handler mhandle, int LEFT_DIVIDER, int RIGHT_DIVIDER) {
+    public AudioEngine(Handler mhandle) {
         this.isRunning = false;
         this.mhandle = mhandle;
-        isExternalStorageWritable();
-        this.LEFT_DIVIDER = LEFT_DIVIDER;
-        this.RIGHT_DIVIDER = RIGHT_DIVIDER;
+//        isExternalStorageWritable();
         recordInstance = findAudioRecord();
 
     }
@@ -49,6 +36,7 @@ public class AudioEngine extends Thread {
                 for (short channelConfig : new short[] { AudioFormat.CHANNEL_IN_STEREO }) {
                     try {
                         Log.i("AudioRecording", "Trying: " + "Sample Rate: " + rate + " Format: " + audioFormat + " Channel:" + channelConfig);
+                        int BUFFSIZE = 0;
                         BUFFSIZE = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
 
                         if (BUFFSIZE != AudioRecord.ERROR_BAD_VALUE) {
@@ -56,7 +44,6 @@ public class AudioEngine extends Thread {
                             AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER, rate, channelConfig, audioFormat, BUFFSIZE*2);
 
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
-                                SAMPLERATE = rate;
                                 return recorder;
                         }
                         else{
@@ -109,18 +96,6 @@ public class AudioEngine extends Thread {
         isRunning = false;
     }
 
-    public double[] smooth(double[] input){
-        final int windowSize = 5;
-        double[] output = new double[input.length];
-        double SMAy = 0;
-        for(int i = windowSize; i < input.length; i++){
-            SMAy = SMAy + (input[i]/windowSize) - (input[i-windowSize]/windowSize);
-            output[i-windowSize] = SMAy;
-        }
-
-        return output;
-    }
-
     public void run(){
         try{
             if(mExternalStorageAvailable && mExternalStorageWriteable) {
@@ -138,8 +113,6 @@ public class AudioEngine extends Thread {
 
                 while (this.isRunning) {
                     short[] buff = new short[4 * READ_2MS];
-//                    double[] left = new double[2 * READ_2MS];
-//                    double[] right = new double[2 * READ_2MS];
 
                     double[] leftVariable = new double[12 * READ_2MS];
                     double[] rightVariable = new double[12 * READ_2MS];
@@ -190,26 +163,11 @@ public class AudioEngine extends Thread {
 //                                rightList.add(String.valueOf(rightVariable[i]));
 //                            }
 
-//                            //Cross correlation for identical sized buffers
-//                            double[] xCorrelation = DSP.xcorr(left, right);
-//                            double max = xCorrelation[0];
-
                             double[] xCorrFull = DSP.xcorr(leftVariable, rightVariable);
                             double maxFull = xCorrFull[0];
 
-//                            int index = 0;
-//                            int location = 0;
                             int indexFull = 0;
                             int locationFull = 0;
-//                            for(double weight : xCorrelation){
-////                                corrList.add(String.valueOf(weight));
-//                                if(weight > max){
-//                                    max = weight;
-//                                    location = index;
-//                                }
-//                                index++;
-//                            }
-
 
                             for(double weight : xCorrFull){
                                 if (weight > maxFull){
@@ -218,36 +176,13 @@ public class AudioEngine extends Thread {
                                 }
                                 indexFull++;
                             }
-//                            double TDoA = (1/(double)SAMPLERATE) * (max - xCorrelation.length);
-//                            double TDoAFull = (1/(double)SAMPLERATE) * (maxFull - xCorrFull.length);
-//
-//                            location = location - left.length;
+
                             locationFull = locationFull - leftVariable.length;
-                            Log.i("Index: ", " full index is " + locationFull);
                             Message msg;
 
-                            int TOP_LEFT_MSG = 1;
-                            int BOT_LEFT_MSG = 2;
-                            int TOP_RIGHT_MSG = 3;
-                            int BOT_RIGHT_MSG = 4;
-                            if(locationFull < 0){
-                                //RIGHT
-                                if(locationFull > RIGHT_DIVIDER){
-                                    msg = mhandle.obtainMessage(TOP_RIGHT_MSG, locationFull);
-                                }
-                                else{
-                                    msg = mhandle.obtainMessage(BOT_RIGHT_MSG, locationFull);
-                                }
-                            }
-                            else{
-                                //LEFT
-                                if(locationFull < LEFT_DIVIDER){
-                                    msg = mhandle.obtainMessage(TOP_LEFT_MSG, locationFull);
-                                }
-                                else{
-                                    msg = mhandle.obtainMessage(BOT_LEFT_MSG, locationFull);
-                                }
-                            }
+                            int CLASSIFICATION = 1;
+                            msg = mhandle.obtainMessage(CLASSIFICATION);
+                            msg.arg1 = locationFull;
                             mhandle.sendMessage(msg);
                             Thread.sleep(1200);
                         }
@@ -259,8 +194,7 @@ public class AudioEngine extends Thread {
 //                    bufferedWriter.newLine();
 //                }
 //                bufferedWriter.close();
-            }
-            else{
+            } else {
                 Log.i("Checking Storage", "run: External Storage Not Available");
             }
         }catch (Exception e){
