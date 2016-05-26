@@ -18,6 +18,10 @@ public class MainActivity extends AppCompatActivity {
     private int RIGHT_CALIBRATION = -17;
     final int PERMISSIONS_RECORD_AUDIO = 1;
     final int PERMISSIONS_WRITE_STORAGE = 2;
+
+    final int CALIBRATION_REQUEST = 2;
+    final int CALIBRATION_RESULT_SUCCESS = 5;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,10 +127,20 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         Intent myIntent = new Intent(MainActivity.this, CalibrationActivity.class);
 //                        myIntent.putExtra("key", value); //Optional parameters
-                        MainActivity.this.startActivity(myIntent);
+                        MainActivity.this.startActivityForResult(myIntent, 0);
                     }
                 }
         );
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        if(requestCode == CALIBRATION_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                Bundle calibValues = data.getExtras();
+                LEFT_CALIBRATION = calibValues.getInt("left_calibration");
+                RIGHT_CALIBRATION = calibValues.getInt("right_calibration");
+            }
+        }
     }
 
 }
