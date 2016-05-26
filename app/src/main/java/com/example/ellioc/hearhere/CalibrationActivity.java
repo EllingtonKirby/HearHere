@@ -1,13 +1,16 @@
 package com.example.ellioc.hearhere;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,9 +20,12 @@ import java.util.HashMap;
 public class CalibrationActivity extends AppCompatActivity {
 
     private static final int CLASSIFICATION = 1;
+    private static final int CALIBRATION_REQUEST = 2;
     AudioEngine audioEngine = null;
     ArrayAdapter<CharSequence> adapter = null;
     Spinner spinner = null;
+    private Button finishCalibrate = null;
+    private Button startCalibrate = null;
 
     private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>(){{
         put("Top Left", new ArrayList<Integer>());
@@ -42,6 +48,7 @@ public class CalibrationActivity extends AppCompatActivity {
                 case CLASSIFICATION:
                     //TODO Is this thread safe?
                     int location = msg.arg1;
+                    Log.i("Calibration: ", "returned value is " + location);
                     String selectedSection = spinner.getSelectedItem().toString();
                     ArrayList<Integer> selectedCalibrationValues = calibrationValues.get(selectedSection);
                     selectedCalibrationValues.add(location);
@@ -49,6 +56,7 @@ public class CalibrationActivity extends AppCompatActivity {
                         stopAudioEngine();
                         updateThresholds();
                     }
+                    break;
             }
             return true;
         }
@@ -63,7 +71,7 @@ public class CalibrationActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         assert spinner != null;
         spinner.setAdapter(adapter);
-        final Button startCalibrate = (Button) findViewById(R.id.startCalibration);
+        startCalibrate = (Button) findViewById(R.id.startCalibration);
         assert startCalibrate != null;
         startCalibrate.setOnClickListener(
                 new View.OnClickListener() {
@@ -74,6 +82,34 @@ public class CalibrationActivity extends AppCompatActivity {
                     }
                 }
         );
+        finishCalibrate = (Button) findViewById(R.id.finishCalibration);
+        assert finishCalibrate != null;
+        finishCalibrate.setVisibility(View.INVISIBLE);
+        finishCalibrate.setOnClickListener(
+                new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v){
+                        int topLeft = thresholds.get("Top Left");
+                        int botLeft = thresholds.get("Bottom Left");
+                        int LEFT_DIVIDER = (topLeft + botLeft) / 2;
+                        int botRight = thresholds.get("Bottom Right");
+                        int topRight = thresholds.get("Top Right");
+                        int RIGHT_DIVIDER = (topRight + botRight) / 2;
+
+
+                        Intent data = new Intent();
+                        data.putExtra("left_calibration", LEFT_DIVIDER);
+                        data.putExtra("right_calibration", RIGHT_DIVIDER);
+                        setResult(CALIBRATION_REQUEST, data);
+                        finish();
+                    }
+                }
+        );
+    }
+
+    public void onPause(){
+        super.onPause();
+        stopAudioEngine();
     }
 
     public int getMedian(ArrayList<Integer> values){
@@ -87,10 +123,19 @@ public class CalibrationActivity extends AppCompatActivity {
     }
 
     public void updateThresholds(){
+        String selectedSection = spinner.getSelectedItem().toString();
         adapter.remove(spinner.getSelectedItem().toString());
-        //TODO add toast when threshold is being set to indicate enough taps. Update arrays
-//        Collections.sort(calibrationValues.get(selectedSection));
-//        thresholds.put(selectedSection, getMedian(calibrationValues.get(selectedSection)));
+        Collections.sort(calibrationValues.get(selectedSection));
+        thresholds.put(selectedSection, getMedian(calibrationValues.get(selectedSection)));
+        Toast.makeText(getApplicationContext(), "Calibration complete for " + selectedSection,
+                Toast.LENGTH_SHORT).show();
+        if(adapter.isEmpty()){
+            finishCalibrate.setVisibility(View.VISIBLE);
+            startCalibrate.setVisibility(View.INVISIBLE);
+        }
+        else{
+            startCalibrate.setClickable(true);
+        }
     }
 
     public void startAudioEngine(){
