@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
     final int PERMISSIONS_RECORD_AUDIO = 1;
     final int PERMISSIONS_WRITE_STORAGE = 2;
 
-    final int CALIBRATION_REQUEST = 2;
+    final int CALIBRATION_REQUEST = 1;
     final int CALIBRATION_RESULT_SUCCESS = 5;
 
     @Override
@@ -28,10 +28,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        if(!hasWriteExternalStoragePermission())
+        if(!hasWriteExternalStoragePermission()) {
             requestWriteExternalStoragePermission();
-        if(!hasRecordAudioPermission())
+        }
+        if(!hasRecordAudioPermission()) {
             requestRecordAudioPermission();
+        }
         else{
             bindButtons();
         }
@@ -126,8 +128,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Intent myIntent = new Intent(MainActivity.this, CalibrationActivity.class);
-//                        myIntent.putExtra("key", value); //Optional parameters
-                        MainActivity.this.startActivityForResult(myIntent, 0);
+                        MainActivity.this.startActivityForResult(myIntent, CALIBRATION_REQUEST);
                     }
                 }
         );
@@ -136,9 +137,8 @@ public class MainActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         if(requestCode == CALIBRATION_REQUEST) {
             if (resultCode == RESULT_OK) {
-                Bundle calibValues = data.getExtras();
-                LEFT_CALIBRATION = calibValues.getInt("left_calibration");
-                RIGHT_CALIBRATION = calibValues.getInt("right_calibration");
+                LEFT_CALIBRATION = data.getIntExtra("left_calibration", 14);
+                RIGHT_CALIBRATION = data.getIntExtra("right_calibration", -17);
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.ellioc.hearhere;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -32,10 +33,10 @@ public class GameActivity extends Activity {
         setContentView(R.layout.activity_game);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        Bundle calibValues = getIntent().getExtras();
-        if (calibValues != null){
-            LEFT_DIVIDER = calibValues.getInt("left_calibration");
-            RIGHT_DIVIDER = calibValues.getInt("right_calibration");
+        Intent data = getIntent();
+        if (data != null){
+            LEFT_DIVIDER = data.getIntExtra("left_calibration", 14);
+            RIGHT_DIVIDER = data.getIntExtra("right_calibration", -17);
             Log.i("Calibration", " calibration at " + LEFT_DIVIDER + " " + RIGHT_DIVIDER);
         }
         else {
@@ -148,6 +149,7 @@ public class GameActivity extends Activity {
 
     public void startAudioEngine(){
         audioEngine = new AudioEngine(mhandle);
+        Log.i("Audio Engine", "Not Null");
         audioEngine.start_engine();
     }
 
@@ -164,6 +166,7 @@ public class GameActivity extends Activity {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.i("Start Game", "Classification Started");
                         startAudioEngine();
                         button1.setVisibility(View.INVISIBLE);
                         button2.setVisibility(View.VISIBLE);

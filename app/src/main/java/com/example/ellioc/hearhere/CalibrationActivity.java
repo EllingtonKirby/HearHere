@@ -10,9 +10,13 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -20,7 +24,7 @@ import java.util.HashMap;
 public class CalibrationActivity extends AppCompatActivity {
 
     private static final int CLASSIFICATION = 1;
-    private static final int CALIBRATION_REQUEST = 2;
+    private static final CharSequence[] charSequences = {"Top Left", "Top Right", "Bottom Left", "Bottom Right"};
     AudioEngine audioEngine = null;
     ArrayAdapter<CharSequence> adapter = null;
     Spinner spinner = null;
@@ -46,7 +50,6 @@ public class CalibrationActivity extends AppCompatActivity {
         public boolean handleMessage(Message msg){
             switch (msg.what){
                 case CLASSIFICATION:
-                    //TODO Is this thread safe?
                     int location = msg.arg1;
                     Log.i("Calibration: ", "returned value is " + location);
                     String selectedSection = spinner.getSelectedItem().toString();
@@ -67,7 +70,9 @@ public class CalibrationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calibration);
         spinner = (Spinner) findViewById(R.id.quadrantSpinner);
-        adapter = ArrayAdapter.createFromResource(this, R.array.quadrants, android.R.layout.simple_spinner_item);
+       // adapter = ArrayAdapter.createFromResource(this, R.array.quadrants, android.R.layout.simple_spinner_item);
+        ArrayList<CharSequence> quadrantNames = new ArrayList<>(Arrays.asList(charSequences));
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, quadrantNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         assert spinner != null;
         spinner.setAdapter(adapter);
@@ -100,7 +105,7 @@ public class CalibrationActivity extends AppCompatActivity {
                         Intent data = new Intent();
                         data.putExtra("left_calibration", LEFT_DIVIDER);
                         data.putExtra("right_calibration", RIGHT_DIVIDER);
-                        setResult(CALIBRATION_REQUEST, data);
+                        setResult(RESULT_OK, data);
                         finish();
                     }
                 }
@@ -124,7 +129,7 @@ public class CalibrationActivity extends AppCompatActivity {
 
     public void updateThresholds(){
         String selectedSection = spinner.getSelectedItem().toString();
-        adapter.remove(spinner.getSelectedItem().toString());
+        adapter.remove((CharSequence)spinner.getSelectedItem());
         Collections.sort(calibrationValues.get(selectedSection));
         thresholds.put(selectedSection, getMedian(calibrationValues.get(selectedSection)));
         Toast.makeText(getApplicationContext(), "Calibration complete for " + selectedSection,

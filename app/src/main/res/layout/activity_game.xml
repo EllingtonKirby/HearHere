@@ -37,8 +37,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/view"
-        android:layout_toStartOf="@+id/view2"
-        android:layout_toLeftOf="@+id/view2" />
+        android:layout_toStartOf="@+id/button1"
+        android:layout_toLeftOf="@+id/button1" />
 
     <View style="@style/Divider"
         android:layout_centerVertical="true"
@@ -62,9 +62,9 @@
 
     <View style="@style/DividerVertical"
         android:background="#54020202"
-        android:layout_below="@+id/button1"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/view2" />
+        android:id="@+id/view3"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -73,9 +73,9 @@
         android:src="@drawable/crash"
         android:contentDescription="@string/tappingImage"
         android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/view2"
-        android:layout_toEndOf="@+id/view2"
-        android:layout_below="@+id/botRight" />
+        android:layout_toEndOf="@+id/view3"
+        android:layout_below="@+id/view"
+        android:layout_toRightOf="@+id/view3" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -83,12 +83,12 @@
         android:id="@+id/botRight"
         android:src="@drawable/hihat"
         android:contentDescription="@string/tappingImage"
-        android:layout_alignTop="@+id/view2"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_alignBottom="@+id/topRight"
-        android:layout_toRightOf="@+id/view2"
-        android:layout_toEndOf="@+id/view2" />
+        android:layout_toEndOf="@+id/view3"
+        android:layout_below="@+id/button1"
+        android:layout_toRightOf="@+id/view3" />
 
 
 </RelativeLayout>

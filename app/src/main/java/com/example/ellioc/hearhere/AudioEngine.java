@@ -23,11 +23,11 @@ public class AudioEngine extends Thread {
     Handler mhandle = null;
 
     public AudioEngine(Handler mhandle) {
+        Log.i("Audio Engine", "Audio Engine Constructor");
         this.isRunning = false;
         this.mhandle = mhandle;
 //        isExternalStorageWritable();
         recordInstance = findAudioRecord();
-
     }
 
     public AudioRecord findAudioRecord() {
@@ -88,8 +88,9 @@ public class AudioEngine extends Thread {
     }
 
     public void start_engine(){
-            this.isRunning = true;
-            this.start();
+        this.isRunning = true;
+        Log.i("Audio Engine", "Started");
+        this.start();
     }
 
     public void stop_engine(){
@@ -98,105 +99,101 @@ public class AudioEngine extends Thread {
 
     public void run(){
         try{
-            if(mExternalStorageAvailable && mExternalStorageWriteable) {
-//                File root = getSoundStorageDir();
-//                File toWrite = new File(root, "RecordedAudio");
+//            File root = getSoundStorageDir();
+//            File toWrite = new File(root, "RecordedAudio");
 //
-//                FileWriter writer = new FileWriter(toWrite);
-//                BufferedWriter bufferedWriter = new BufferedWriter(writer);
-//                ArrayList<String> leftList = new ArrayList<>();
-//                ArrayList<String> rightList = new ArrayList<>();
-//                ArrayList<String> corrList = new ArrayList<>();
+//            FileWriter writer = new FileWriter(toWrite);
+//            BufferedWriter bufferedWriter = new BufferedWriter(writer);
+//            ArrayList<String> leftList = new ArrayList<>();
+//            ArrayList<String> rightList = new ArrayList<>();
+//            ArrayList<String> corrList = new ArrayList<>();
 
-                final int READ_2MS = 96;
-                recordInstance.startRecording();
+            final int READ_2MS = 96;
+            recordInstance.startRecording();
 
-                while (this.isRunning) {
-                    short[] buff = new short[4 * READ_2MS];
+            while (this.isRunning) {
+                short[] buff = new short[4 * READ_2MS];
 
-                    double[] leftVariable = new double[12 * READ_2MS];
-                    double[] rightVariable = new double[12 * READ_2MS];
-                    boolean metVal = false;
-                    recordInstance.read(buff, 0,  4*READ_2MS);
-                    for(int i = 0; i <  4*READ_2MS; i++) {
-                        if(i % 2 == 0) {
-                            if (Math.abs(buff[i]) > 1500) {
-                                metVal = true;
+                double[] leftVariable = new double[12 * READ_2MS];
+                double[] rightVariable = new double[12 * READ_2MS];
+                boolean metVal = false;
+                recordInstance.read(buff, 0,  4*READ_2MS);
+                for(int i = 0; i <  4*READ_2MS; i++) {
+                    if(i % 2 == 0) {
+                        if (Math.abs(buff[i]) > 1500) {
+                            metVal = true;
+                            break;
+                        }
+                    }
+                }
+                if(metVal){
+                    boolean foundPeak = false;
+                    short[] validationBuffer = new short[20 * READ_2MS];
+                    recordInstance.read(validationBuffer, 0, 20 * READ_2MS);
+                    for(int i = 0; i < validationBuffer.length; i++){
+                        if (i % 2 ==0){
+                            if( Math.abs(validationBuffer[i]) > 10000) {
+                                foundPeak = true;
                                 break;
                             }
                         }
                     }
-                    if(metVal){
-                        boolean foundPeak = false;
-                        short[] validationBuffer = new short[20 * READ_2MS];
-                        recordInstance.read(validationBuffer, 0, 20 * READ_2MS);
-                        for(int i = 0; i < validationBuffer.length; i++){
-                            if (i % 2 ==0){
-                                if( Math.abs(validationBuffer[i]) > 10000) {
-                                    foundPeak = true;
-                                    break;
-                                }
+                    if(foundPeak){
+                        for(int i = 0; i < buff.length; i++){
+                            if(i % 2 == 0){
+//                                left[i/2] = buff[i];
+                                leftVariable[i/2] = buff[i];
+                            }
+                            else{
+//                                right[i/2] = buff[i];
+                                rightVariable[i/2] = buff[i];
                             }
                         }
-                        if(foundPeak){
-                            for(int i = 0; i < buff.length; i++){
-                                if(i % 2 == 0){
-//                                    left[i/2] = buff[i];
-                                    leftVariable[i/2] = buff[i];
-                                }
-                                else{
-//                                    right[i/2] = buff[i];
-                                    rightVariable[i/2] = buff[i];
-                                }
+                        //Create variable length buffers for both left and right microphones
+                        for(int i = buff.length; i < buff.length + validationBuffer.length; i++){
+                            if(i % 2 == 0){
+                                leftVariable[i/2] = validationBuffer[i - buff.length];
                             }
-                            //Create variable length buffers for both left and right microphones
-                            for(int i = buff.length; i < buff.length + validationBuffer.length; i++){
-                                if(i % 2 == 0){
-                                    leftVariable[i/2] = validationBuffer[i - buff.length];
-                                }
-                                else{
-                                    rightVariable[i/2] = validationBuffer[i - buff.length];
-                                }
+                            else{
+                                rightVariable[i/2] = validationBuffer[i - buff.length];
                             }
-//                            for(int i = 0; i < leftVariable.length; i++){
-//                                leftList.add(String.valueOf(leftVariable[i]));
-//                                rightList.add(String.valueOf(rightVariable[i]));
-//                            }
-
-                            double[] xCorrFull = DSP.xcorr(leftVariable, rightVariable);
-                            double maxFull = xCorrFull[0];
-
-                            int indexFull = 0;
-                            int locationFull = 0;
-
-                            for(double weight : xCorrFull){
-                                if (weight > maxFull){
-                                    maxFull = weight;
-                                    locationFull = indexFull;
-                                }
-                                indexFull++;
-                            }
-
-                            locationFull = locationFull - leftVariable.length;
-                            Message msg;
-
-                            int CLASSIFICATION = 1;
-                            msg = mhandle.obtainMessage(CLASSIFICATION);
-                            msg.arg1 = locationFull;
-                            mhandle.sendMessage(msg);
-                            Thread.sleep(1200);
                         }
+//                        for(int i = 0; i < leftVariable.length; i++){
+//                            leftList.add(String.valueOf(leftVariable[i]));
+//                            rightList.add(String.valueOf(rightVariable[i]));
+//                        }
+
+                        double[] xCorrFull = DSP.xcorr(leftVariable, rightVariable);
+                        double maxFull = xCorrFull[0];
+
+                        int indexFull = 0;
+                        int locationFull = 0;
+
+                        for(double weight : xCorrFull){
+                            if (weight > maxFull){
+                                maxFull = weight;
+                                locationFull = indexFull;
+                            }
+                            indexFull++;
+                        }
+
+                        locationFull = locationFull - leftVariable.length;
+                        Message msg;
+
+                        int CLASSIFICATION = 1;
+                        msg = mhandle.obtainMessage(CLASSIFICATION);
+                        msg.arg1 = locationFull;
+                        mhandle.sendMessage(msg);
+                        Thread.sleep(1200);
                     }
                 }
-//                int j = 0;
-//                for(int i = 0; i < leftList.size() / 2; i++){
-//                    bufferedWriter.write(leftList.get(i) + "\t" + rightList.get(i));
-//                    bufferedWriter.newLine();
-//                }
-//                bufferedWriter.close();
-            } else {
-                Log.i("Checking Storage", "run: External Storage Not Available");
             }
+//            int j = 0;
+//            for(int i = 0; i < leftList.size() / 2; i++){
+//                bufferedWriter.write(leftList.get(i) + "\t" + rightList.get(i));
+//                bufferedWriter.newLine();
+//            }
+//            bufferedWriter.close();
         }catch (Exception e){
             e.printStackTrace();
         }
