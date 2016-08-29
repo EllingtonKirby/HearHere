@@ -62,6 +62,7 @@ public class GameActivity extends Activity {
                     Log.i("Location ", "Returned location is " + location);
                     if(location > 0){
                         if(location < LEFT_DIVIDER){
+                            Log.i("Location", "Top Left");
                             topLeft.setVisibility(View.INVISIBLE);
                             mPlayer = MediaPlayer.create(GameActivity.this, R.raw.snare);
                             topLeft.postDelayed(new Runnable() {
@@ -74,6 +75,7 @@ public class GameActivity extends Activity {
                             mPlayer.start();
                         }
                         else{
+                            Log.i("Location", "Bot Left");
                             botLeft.setVisibility(View.INVISIBLE);
                             mPlayer = MediaPlayer.create(GameActivity.this, R.raw.crash);
                             botLeft.postDelayed(new Runnable() {
@@ -88,6 +90,7 @@ public class GameActivity extends Activity {
                     }
                     else{
                         if(location > RIGHT_DIVIDER){
+                            Log.i("Location", "Top Right");
                             topRight.setVisibility(View.INVISIBLE);
                             mPlayer = MediaPlayer.create(GameActivity.this, R.raw.kick);
                             topRight.postDelayed(new Runnable() {
@@ -100,6 +103,7 @@ public class GameActivity extends Activity {
                             mPlayer.start();
                         }
                         else{
+                            Log.i("Location", "Bot Right");
                             botRight.setVisibility(View.INVISIBLE);
                             mPlayer = MediaPlayer.create(GameActivity.this, R.raw.hat);
                             botRight.postDelayed(new Runnable() {

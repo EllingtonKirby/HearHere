@@ -2,11 +2,12 @@ package com.example.ellioc.hearhere;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.media.audiofx.AcousticEchoCanceler;
 import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
 import android.os.Handler;
-
+import android.media.audiofx.NoiseSuppressor;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -28,6 +29,8 @@ public class AudioEngine extends Thread {
         this.mhandle = mhandle;
 //        isExternalStorageWritable();
         recordInstance = findAudioRecord();
+        NoiseSuppressor.create(recordInstance.getAudioSessionId());
+        AcousticEchoCanceler.create(recordInstance.getAudioSessionId());
     }
 
     public AudioRecord findAudioRecord() {
