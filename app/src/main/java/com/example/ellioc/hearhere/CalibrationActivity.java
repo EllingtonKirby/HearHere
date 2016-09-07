@@ -24,7 +24,11 @@ import java.util.HashMap;
 public class CalibrationActivity extends AppCompatActivity {
 
     private static final int CLASSIFICATION = 1;
-    private static final CharSequence[] charSequences = {"Top Left", "Top Right", "Bottom Left", "Bottom Right"};
+    private static final CharSequence[] charSequences = {"Top Left", "Top Mid",
+            "Top Right",
+            "Bottom Left",
+            "Bottom Mid",
+            "Bottom Right"};
     AudioEngine audioEngine = null;
     ArrayAdapter<CharSequence> adapter = null;
     Spinner spinner = null;
@@ -33,15 +37,19 @@ public class CalibrationActivity extends AppCompatActivity {
 
     private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>(){{
         put("Top Left", new ArrayList<Integer>());
+        put("Top Mid", new ArrayList<Integer>());
         put("Top Right", new ArrayList<Integer>());
         put("Bottom Left", new ArrayList<Integer>());
+        put("Bottom Mid", new ArrayList<Integer>());
         put("Bottom Right", new ArrayList<Integer>());
     }};
 
     private static HashMap<String, Integer> thresholds = new HashMap<String, Integer>() {{
         put("Top Left", 0);
+        put("Top Mid", 0);
         put("Top Right", 0);
         put("Bottom Left", 0);
+        put("Bottom Mid", 0);
         put("Bottom Right", 0);
     }};
 
@@ -96,15 +104,24 @@ public class CalibrationActivity extends AppCompatActivity {
                     public void onClick(View v){
                         int topLeft = thresholds.get("Top Left");
                         int botLeft = thresholds.get("Bottom Left");
-                        int LEFT_DIVIDER = (topLeft + botLeft) / 2;
+                        int topMid = thresholds.get("Top Mid");
+                        int botMid = thresholds.get("Bottom Mid");
                         int botRight = thresholds.get("Bottom Right");
                         int topRight = thresholds.get("Top Right");
-                        int RIGHT_DIVIDER = (topRight + botRight) / 2;
-
 
                         Intent data = new Intent();
-                        data.putExtra("left_calibration", LEFT_DIVIDER);
-                        data.putExtra("right_calibration", RIGHT_DIVIDER);
+                        data.putExtra("top_left_calibration", topLeft);
+                        data.putExtra("top_mid_calibration", topMid);
+                        data.putExtra("top_right_calibration", topRight);
+                        data.putExtra("bot_left_calibration", botLeft);
+                        data.putExtra("bot_mid_calibration", botMid);
+                        data.putExtra("bot_right_calibration", botRight);
+                        Log.i("Top Left calibration", Integer.toString(topLeft));
+                        Log.i("Top Mid calibration",Integer.toString(topMid) );
+                        Log.i("Top right calibration",Integer.toString(topRight) );
+                        Log.i("Bot Left calibration", Integer.toString(botLeft));
+                        Log.i("Bot Mid calibration", Integer.toString(botMid));
+                        Log.i("Bot Right calibration",Integer.toString(botRight) );
                         setResult(RESULT_OK, data);
                         finish();
                     }
@@ -114,6 +131,11 @@ public class CalibrationActivity extends AppCompatActivity {
 
     public void onPause(){
         super.onPause();
+        stopAudioEngine();
+    }
+
+    public void onStop(){
+        super.onStop();
         stopAudioEngine();
     }
 

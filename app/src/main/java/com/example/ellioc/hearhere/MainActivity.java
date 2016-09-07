@@ -14,8 +14,13 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    private int LEFT_CALIBRATION = 14;
-    private int RIGHT_CALIBRATION = -17;
+    private int TOP_LEFT_CALIBRATION;
+    private int TOP_MID_CALIBRATION;
+    private int TOP_RIGHT_CALIBRATION;
+    private int BOT_LEFT_CALIBRATION;
+    private int BOT_MID_CALIBRATION;
+    private int BOT_RIGHT_CALIBRATION;
+
     final int PERMISSIONS_RECORD_AUDIO = 1;
     final int PERMISSIONS_WRITE_STORAGE = 2;
 
@@ -118,8 +123,12 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Intent myIntent = new Intent(MainActivity.this, GameActivity.class);
-                        myIntent.putExtra("left_calibration", LEFT_CALIBRATION);
-                        myIntent.putExtra("right_calibration", RIGHT_CALIBRATION);
+                        myIntent.putExtra("top_left_calibration", TOP_LEFT_CALIBRATION);
+                        myIntent.putExtra("top_mid_calibration", 0);
+                        myIntent.putExtra("top_right_calibration", -17);
+                        myIntent.putExtra("bot_left_calibration", 0);
+                        myIntent.putExtra("bot_mid_calibration", 0);
+                        myIntent.putExtra("bot_right_calibration", 0);
                         MainActivity.this.startActivity(myIntent);                    }
                 }
         );
@@ -137,8 +146,12 @@ public class MainActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         if(requestCode == CALIBRATION_REQUEST) {
             if (resultCode == RESULT_OK) {
-                LEFT_CALIBRATION = data.getIntExtra("left_calibration", 14);
-                RIGHT_CALIBRATION = data.getIntExtra("right_calibration", -17);
+                TOP_LEFT_CALIBRATION   = data.getIntExtra("left_calibration", 14);
+                TOP_MID_CALIBRATION    = data.getIntExtra("top_mid_calibration", 0);
+                TOP_RIGHT_CALIBRATION  = data.getIntExtra("right_calibration", -17);
+                BOT_LEFT_CALIBRATION   = data.getIntExtra("bot_left_calibration", 0);
+                BOT_MID_CALIBRATION    = data.getIntExtra("bot_mid_calibration", 0);
+                BOT_RIGHT_CALIBRATION  = data.getIntExtra("bot_right_calibration", 0);
             }
         }
     }

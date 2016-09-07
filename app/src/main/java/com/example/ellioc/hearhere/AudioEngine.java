@@ -116,7 +116,7 @@ public class AudioEngine extends Thread {
 
             while (this.isRunning) {
                 short[] buff = new short[4 * READ_2MS];
-
+                short max_seen = 0;
                 double[] leftVariable = new double[12 * READ_2MS];
                 double[] rightVariable = new double[12 * READ_2MS];
                 boolean metVal = false;
@@ -125,7 +125,9 @@ public class AudioEngine extends Thread {
                     if(i % 2 == 0) {
                         if (Math.abs(buff[i]) > 1500) {
                             metVal = true;
-                            break;
+                        }
+                        if(buff[i] > max_seen){
+                            max_seen = buff[i];
                         }
                     }
                 }
@@ -137,8 +139,10 @@ public class AudioEngine extends Thread {
                         if (i % 2 ==0){
                             if( Math.abs(validationBuffer[i]) > 10000) {
                                 foundPeak = true;
-                                break;
                             }
+                        }
+                        if(validationBuffer[i] > max_seen){
+                            max_seen = validationBuffer[i];
                         }
                     }
                     if(foundPeak){
@@ -182,7 +186,7 @@ public class AudioEngine extends Thread {
 
                         locationFull = locationFull - leftVariable.length;
                         Message msg;
-
+                        Log.i("Max Amp", "Saw " + Integer.toString(max_seen));
                         int CLASSIFICATION = 1;
                         msg = mhandle.obtainMessage(CLASSIFICATION);
                         msg.arg1 = locationFull;

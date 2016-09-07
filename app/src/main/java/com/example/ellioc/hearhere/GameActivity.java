@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class GameActivity extends Activity {
 
@@ -19,13 +20,19 @@ public class GameActivity extends Activity {
 
     private static final int CLASSIFICATION = 1;
 
-    private int LEFT_DIVIDER = 0;
-    private int RIGHT_DIVIDER = 0;
+    private int TOP_LEFT_CLASSIFICATION  = 0;
+    private int TOP_MID_CLASSIFICATION   = 0;
+    private int TOP_RIGHT_CLASSIFICATION = 0;
+    private int BOT_LEFT_CLASSIFICATION  = 0;
+    private int BOT_MID_CLASSIFICATION   = 0;
+    private int BOT_RIGHT_CLASSIFICATION = 0;
 
-    private ImageView topRight = null;
-    private ImageView botRight = null;
-    private ImageView topLeft = null;
-    private ImageView botLeft = null;
+    private TextView topRight = null;
+    private TextView botRight = null;
+    private TextView topLeft = null;
+    private TextView botLeft = null;
+    private TextView topMid = null;
+    private TextView botMid = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,19 +42,20 @@ public class GameActivity extends Activity {
 
         Intent data = getIntent();
         if (data != null){
-            LEFT_DIVIDER = data.getIntExtra("left_calibration", 14);
-            RIGHT_DIVIDER = data.getIntExtra("right_calibration", -17);
-            Log.i("Calibration", " calibration at " + LEFT_DIVIDER + " " + RIGHT_DIVIDER);
-        }
-        else {
-            LEFT_DIVIDER = 14;
-            RIGHT_DIVIDER = -17;
+            TOP_LEFT_CLASSIFICATION  = data.getIntExtra("left_calibration", 14);
+            TOP_MID_CLASSIFICATION   = data.getIntExtra("top_mid_calibration", 0);
+            TOP_RIGHT_CLASSIFICATION = data.getIntExtra("right_calibration", -17);
+            BOT_LEFT_CLASSIFICATION  = data.getIntExtra("bot_left_calibration", 0);
+            BOT_MID_CLASSIFICATION   = data.getIntExtra("bot_mid_calibration", 0);
+            BOT_RIGHT_CLASSIFICATION = data.getIntExtra("bot_right_calibration", 0);
         }
 
-        topRight = (ImageView) findViewById(R.id.topRight);
-        botRight = (ImageView) findViewById(R.id.botRight);
-        topLeft = (ImageView) findViewById(R.id.topLeft);
-        botLeft = (ImageView) findViewById(R.id.botLeft);
+        topRight = (TextView) findViewById(R.id.topRight);
+        botRight = (TextView) findViewById(R.id.botRight);
+        topLeft  = (TextView) findViewById(R.id.topLeft);
+        botLeft  = (TextView) findViewById(R.id.botLeft);
+        topMid   = (TextView) findViewById(R.id.topMid);
+        botMid   = (TextView) findViewById(R.id.botMid);
         bindAudioRecord();
 
     }
@@ -60,62 +68,62 @@ public class GameActivity extends Activity {
                 case CLASSIFICATION:
                     int location = msg.arg1;
                     Log.i("Location ", "Returned location is " + location);
-                    if(location > 0){
-                        if(location < LEFT_DIVIDER){
-                            Log.i("Location", "Top Left");
-                            topLeft.setVisibility(View.INVISIBLE);
-                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.snare);
-                            topLeft.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    topLeft.setVisibility(View.VISIBLE);
-                                }
-                            }, 500);
-                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                            mPlayer.start();
-                        }
-                        else{
-                            Log.i("Location", "Bot Left");
-                            botLeft.setVisibility(View.INVISIBLE);
-                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.crash);
-                            botLeft.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    botLeft.setVisibility(View.VISIBLE);
-                                }
-                            }, 500);
-                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                            mPlayer.start();
-                        }
-                    }
-                    else{
-                        if(location > RIGHT_DIVIDER){
-                            Log.i("Location", "Top Right");
-                            topRight.setVisibility(View.INVISIBLE);
-                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.kick);
-                            topRight.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    topRight.setVisibility(View.VISIBLE);
-                                }
-                            }, 500);
-                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                            mPlayer.start();
-                        }
-                        else{
-                            Log.i("Location", "Bot Right");
-                            botRight.setVisibility(View.INVISIBLE);
-                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.hat);
-                            botRight.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    botRight.setVisibility(View.VISIBLE);
-                                }
-                            }, 500);
-                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                            mPlayer.start();
-                        }
-                    }
+//                    if(location > 0){
+//                        if(location < LEFT_DIVIDER){
+//                            Log.i("Location", "Top Left");
+//                            topLeft.setVisibility(View.INVISIBLE);
+//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.snare);
+//                            topLeft.postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    topLeft.setVisibility(View.VISIBLE);
+//                                }
+//                            }, 500);
+//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                            mPlayer.start();
+//                        }
+//                        else{
+//                            Log.i("Location", "Bot Left");
+//                            botLeft.setVisibility(View.INVISIBLE);
+//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.crash);
+//                            botLeft.postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    botLeft.setVisibility(View.VISIBLE);
+//                                }
+//                            }, 500);
+//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                            mPlayer.start();
+//                        }
+//                    }
+//                    else{
+//                        if(location > RIGHT_DIVIDER){
+//                            Log.i("Location", "Top Right");
+//                            topRight.setVisibility(View.INVISIBLE);
+//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.kick);
+//                            topRight.postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    topRight.setVisibility(View.VISIBLE);
+//                                }
+//                            }, 500);
+//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                            mPlayer.start();
+//                        }
+//                        else{
+//                            Log.i("Location", "Bot Right");
+//                            botRight.setVisibility(View.INVISIBLE);
+//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.hat);
+//                            botRight.postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    botRight.setVisibility(View.VISIBLE);
+//                                }
+//                            }, 500);
+//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                            mPlayer.start();
+//                        }
+//                    }
                     default:
                         break;
 
