@@ -1,31 +1,48 @@
 package com.example.ellioc.hearhere;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.media.AudioManager;
+import android.content.Context;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-public class GameActivity extends Activity {
+
+/**
+ * A simple {@link Fragment} subclass.
+ * Activities that contain this fragment must implement the
+ * {@link GameFragment.OnFragmentInteractionListener} interface
+ * to handle interaction events.
+ * Use the {@link GameFragment#newInstance} factory method to
+ * create an instance of this fragment.
+ */
+public class GameFragment extends Fragment {
 
     private AudioEngine audioEngine = null;
 
     private static final int CLASSIFICATION = 1;
 
-    private int TOP_LEFT_CLASSIFICATION  = 0;
-    private int TOP_MID_CLASSIFICATION   = 0;
-    private int TOP_RIGHT_CLASSIFICATION = 0;
-    private int BOT_LEFT_CLASSIFICATION  = 0;
-    private int BOT_MID_CLASSIFICATION   = 0;
-    private int BOT_RIGHT_CLASSIFICATION = 0;
+    private int VALUE_CALIBRATION_A = 0;
+    private int VALUE_CALIBRATION_B = 0;
+    private int VALUE_CALIBRATION_C = 0;
+    private int VALUE_CALIBRATION_D = 0;
+    private int VALUE_CALIBRATION_E = 0;
+    private int VALUE_CALIBRATION_F = 0;
+
+    public static String KEY_CALIBRATION_A = "calibration_A";
+    public static String KEY_CALIBRATION_B = "calibration_B";
+    public static String KEY_CALIBRATION_C = "calibration_C";
+    public static String KEY_CALIBRATION_D = "calibration_D";
+    public static String KEY_CALIBRATION_E = "calibration_E";
+    public static String KEY_CALIBRATION_F = "calibration_F";
 
     private TextView topRight = null;
     private TextView botRight = null;
@@ -33,32 +50,6 @@ public class GameActivity extends Activity {
     private TextView botLeft = null;
     private TextView topMid = null;
     private TextView botMid = null;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_game);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        Intent data = getIntent();
-        if (data != null){
-            TOP_LEFT_CLASSIFICATION  = data.getIntExtra("left_calibration", 14);
-            TOP_MID_CLASSIFICATION   = data.getIntExtra("top_mid_calibration", 0);
-            TOP_RIGHT_CLASSIFICATION = data.getIntExtra("right_calibration", -17);
-            BOT_LEFT_CLASSIFICATION  = data.getIntExtra("bot_left_calibration", 0);
-            BOT_MID_CLASSIFICATION   = data.getIntExtra("bot_mid_calibration", 0);
-            BOT_RIGHT_CLASSIFICATION = data.getIntExtra("bot_right_calibration", 0);
-        }
-
-        topRight = (TextView) findViewById(R.id.topRight);
-        botRight = (TextView) findViewById(R.id.botRight);
-        topLeft  = (TextView) findViewById(R.id.topLeft);
-        botLeft  = (TextView) findViewById(R.id.botLeft);
-        topMid   = (TextView) findViewById(R.id.topMid);
-        botMid   = (TextView) findViewById(R.id.botMid);
-        bindAudioRecord();
-
-    }
 
     public Handler mhandle = new Handler(new Handler.Callback(){
         @Override
@@ -124,8 +115,8 @@ public class GameActivity extends Activity {
 //                            mPlayer.start();
 //                        }
 //                    }
-                    default:
-                        break;
+                default:
+                    break;
 
             }
             return true;
@@ -133,30 +124,87 @@ public class GameActivity extends Activity {
 
     });
 
+    public GameFragment() {
+        // Required empty public constructor
+    }
+
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     * @return A new instance of fragment GameFragment.
+     */
+    // TODO: Rename and change types and number of parameters
+    public static GameFragment newInstance(int A, int B, int C, int D, int E, int F) {
+        GameFragment fragment = new GameFragment();
+        Bundle args = new Bundle();
+        args.putInt(KEY_CALIBRATION_A, A);
+        args.putInt(KEY_CALIBRATION_B, B);
+        args.putInt(KEY_CALIBRATION_C, C);
+        args.putInt(KEY_CALIBRATION_D, D);
+        args.putInt(KEY_CALIBRATION_E, E);
+        args.putInt(KEY_CALIBRATION_F, F);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
-    protected void onPause(){
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            Bundle b = getArguments();
+            VALUE_CALIBRATION_A = b.getInt(KEY_CALIBRATION_A     , 14);
+            VALUE_CALIBRATION_B = b.getInt(KEY_CALIBRATION_B, 0);
+            VALUE_CALIBRATION_C = b.getInt(KEY_CALIBRATION_C     , -17);
+            VALUE_CALIBRATION_D = b.getInt(KEY_CALIBRATION_D, 0);
+            VALUE_CALIBRATION_E = b.getInt(KEY_CALIBRATION_E  , 0);
+            VALUE_CALIBRATION_F = b.getInt(KEY_CALIBRATION_F, 0);
+        }
+    }
+    @Override
+    public void onPause(){
         super.onPause();
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(audioEngine != null) {
             stopAudioEngine();
         }
     }
 
     @Override
-    protected void onResume(){
+    public void onResume(){
         super.onResume();
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         bindAudioRecord();
 
     }
 
     @Override
-    protected void onStop(){
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    public void onStop(){
+        getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(audioEngine != null)
             stopAudioEngine();
-        this.finish();
         super.onStop();
+    }
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.game_fragment, container, false);
+    }
+
+    // TODO: Rename method, update argument and hook method into UI event
+    public void onButtonPressed(Uri uri) {
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
     }
 
     public void startAudioEngine(){
@@ -170,9 +218,8 @@ public class GameActivity extends Activity {
     }
 
     public void bindAudioRecord(){
-        final Button button1 = (Button) findViewById(R.id.button1);
-        final Button button2 = (Button) findViewById(R.id.button2);
-
+        final Button button1 = (Button) getView().findViewById(R.id.button1);
+        final Button button2 = (Button) getView().findViewById(R.id.button2);
         button2.setVisibility(View.INVISIBLE);
         button1.setOnClickListener(
                 new View.OnClickListener() {
@@ -196,6 +243,4 @@ public class GameActivity extends Activity {
                 }
         );
     }
-
-
 }
