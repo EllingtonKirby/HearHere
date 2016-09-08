@@ -10,6 +10,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -22,6 +23,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity implements CalibrationFragment.OnSubmitCalibrationValuesListener{
 
     private int A_CALIBRATION;
@@ -30,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
     private int D_CALIBRATION;
     private int E_CALIBRATION;
     private int F_CALIBRATION;
+    private ArrayList<Integer> calibValues;
 
     final int PERMISSIONS_RECORD_AUDIO = 1;
     final int PERMISSIONS_WRITE_STORAGE = 2;
@@ -82,8 +86,10 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
             firstFragment.setArguments(getIntent().getExtras());
 
             // Add the fragment to the 'fragment_container' FrameLayout
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.flContent, firstFragment).commit();
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.add(R.id.flContent, firstFragment);
+            fragmentTransaction.addToBackStack(null);
+            fragmentTransaction.commit();
             // Setup drawer view
         }
         setupDrawerContent(nvDrawer);
@@ -158,21 +164,16 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
     public void onSubmitCalibrationValues(int requestCode, int resultCode, Intent data){
         if(requestCode == CALIBRATION_REQUEST) {
             if (resultCode == RESULT_OK) {
-                A_CALIBRATION  = data.getIntExtra("left_calibration", 14);
-                B_CALIBRATION  = data.getIntExtra("top_mid_calibration", 0);
-                C_CALIBRATION  = data.getIntExtra("right_calibration", -17);
-                D_CALIBRATION  = data.getIntExtra("bot_left_calibration", 0);
-                E_CALIBRATION  = data.getIntExtra("bot_mid_calibration", 0);
-                F_CALIBRATION  = data.getIntExtra("bot_right_calibration", 0);
+//                A_CALIBRATION  = data.getIntExtra("left_calibration", 14);
+//                B_CALIBRATION  = data.getIntExtra("top_mid_calibration", 0);
+//                C_CALIBRATION  = data.getIntExtra("right_calibration", -17);
+//                D_CALIBRATION  = data.getIntExtra("bot_left_calibration", 0);
+//                E_CALIBRATION  = data.getIntExtra("bot_mid_calibration", 0);
+//                F_CALIBRATION  = data.getIntExtra("bot_right_calibration", 0);
                 IS_CALIBRATED = true;
-
+                calibValues = data.getIntegerArrayListExtra(GameFragment.KEY_CALIBRATION);
                 GameFragment fragment = GameFragment.newInstance(
-                        A_CALIBRATION,
-                        B_CALIBRATION,
-                        C_CALIBRATION,
-                        D_CALIBRATION,
-                        E_CALIBRATION,
-                        F_CALIBRATION
+                        calibValues
                 );
                 // Insert the fragment by replacing any existing fragment
                 FragmentManager fragmentManager = getSupportFragmentManager();
@@ -220,12 +221,7 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                 if(IS_CALIBRATED) {
                     fragmentClass = GameFragment.class;
                     fragment = GameFragment.newInstance(
-                            A_CALIBRATION,
-                            B_CALIBRATION,
-                            C_CALIBRATION,
-                            D_CALIBRATION,
-                            E_CALIBRATION,
-                            F_CALIBRATION
+                            calibValues
                     );
                 }
                 else{
@@ -258,8 +254,10 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
 
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
-
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.flContent, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
         // Highlight the selected item has been done by NavigationView
         menuItem.setChecked(true);
         // Set action bar title

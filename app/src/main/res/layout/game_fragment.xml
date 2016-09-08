@@ -68,7 +68,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="A"
-            android:id="@+id/topLeft"
+            android:id="@+id/textA"
             android:layout_above="@+id/button2"
             android:layout_toRightOf="@+id/textView"
             android:layout_toEndOf="@+id/textView" />
@@ -78,7 +78,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="B"
-            android:id="@+id/topMid"
+            android:id="@+id/textB"
             android:layout_centerVertical="true"
             android:layout_toRightOf="@+id/textView"
             android:layout_toEndOf="@+id/textView" />
@@ -88,7 +88,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="C"
-            android:id="@+id/topRight"
+            android:id="@+id/textC"
             android:layout_below="@+id/button1"
             android:layout_toRightOf="@+id/textView"
             android:layout_toEndOf="@+id/textView"
@@ -99,7 +99,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="D"
-            android:id="@+id/botLeft"
+            android:id="@+id/textD"
             android:layout_above="@+id/button2"
             android:layout_toRightOf="@+id/button2"
             android:layout_toEndOf="@+id/button2"
@@ -111,20 +111,20 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="E"
-            android:id="@+id/botMid"
-            android:layout_alignTop="@+id/topRight"
-            android:layout_alignRight="@+id/botRight"
-            android:layout_alignEnd="@+id/botRight" />
+            android:id="@+id/textE"
+            android:layout_alignTop="@+id/textB"
+            android:layout_alignLeft="@+id/textD"
+            android:layout_alignStart="@+id/textD" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="F"
-            android:id="@+id/botRight"
-            android:layout_alignTop="@+id/topMid"
-            android:layout_alignLeft="@+id/botLeft"
-            android:layout_alignStart="@+id/botLeft" />
+            android:id="@+id/textF"
+            android:layout_alignTop="@+id/textC"
+            android:layout_toRightOf="@+id/textE"
+            android:layout_toEndOf="@+id/textE" />
 
     </RelativeLayout>
 

@@ -1,25 +1,32 @@
 package com.example.ellioc.hearhere;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link GameFragment.OnFragmentInteractionListener} interface
+ * {@link GameFragment} interface
  * to handle interaction events.
  * Use the {@link GameFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -30,91 +37,50 @@ public class GameFragment extends Fragment {
 
     private static final int CLASSIFICATION = 1;
 
-    private int VALUE_CALIBRATION_A = 0;
-    private int VALUE_CALIBRATION_B = 0;
-    private int VALUE_CALIBRATION_C = 0;
-    private int VALUE_CALIBRATION_D = 0;
-    private int VALUE_CALIBRATION_E = 0;
-    private int VALUE_CALIBRATION_F = 0;
-
+    private static ArrayList<Integer> CALIBRATION_VALUES;
     public static String KEY_CALIBRATION_A = "calibration_A";
     public static String KEY_CALIBRATION_B = "calibration_B";
     public static String KEY_CALIBRATION_C = "calibration_C";
     public static String KEY_CALIBRATION_D = "calibration_D";
     public static String KEY_CALIBRATION_E = "calibration_E";
     public static String KEY_CALIBRATION_F = "calibration_F";
-
-    private TextView topRight = null;
-    private TextView botRight = null;
-    private TextView topLeft = null;
-    private TextView botLeft = null;
-    private TextView topMid = null;
-    private TextView botMid = null;
+    public static String KEY_CALIBRATION = "calibration_values";
+    private View A;
+    private View B;
+    private View C;
+    private View D;
+    private View E;
+    private View F;
+    private ArrayList<Pair<View, Integer>> viewsToResourceId;
 
     public Handler mhandle = new Handler(new Handler.Callback(){
         @Override
         public boolean handleMessage(Message msg) {
             MediaPlayer mPlayer;
+            final View view;
             switch (msg.what) {
                 case CLASSIFICATION:
                     int location = msg.arg1;
                     Log.i("Location ", "Returned location is " + location);
-//                    if(location > 0){
-//                        if(location < LEFT_DIVIDER){
-//                            Log.i("Location", "Top Left");
-//                            topLeft.setVisibility(View.INVISIBLE);
-//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.snare);
-//                            topLeft.postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    topLeft.setVisibility(View.VISIBLE);
-//                                }
-//                            }, 500);
-//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-//                            mPlayer.start();
-//                        }
-//                        else{
-//                            Log.i("Location", "Bot Left");
-//                            botLeft.setVisibility(View.INVISIBLE);
-//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.crash);
-//                            botLeft.postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    botLeft.setVisibility(View.VISIBLE);
-//                                }
-//                            }, 500);
-//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-//                            mPlayer.start();
-//                        }
-//                    }
-//                    else{
-//                        if(location > RIGHT_DIVIDER){
-//                            Log.i("Location", "Top Right");
-//                            topRight.setVisibility(View.INVISIBLE);
-//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.kick);
-//                            topRight.postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    topRight.setVisibility(View.VISIBLE);
-//                                }
-//                            }, 500);
-//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-//                            mPlayer.start();
-//                        }
-//                        else{
-//                            Log.i("Location", "Bot Right");
-//                            botRight.setVisibility(View.INVISIBLE);
-//                            mPlayer = MediaPlayer.create(GameActivity.this, R.raw.hat);
-//                            botRight.postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    botRight.setVisibility(View.VISIBLE);
-//                                }
-//                            }, 500);
-//                            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-//                            mPlayer.start();
-//                        }
-//                    }
+                    int min = Integer.MAX_VALUE;
+                    int minLoc = 0;
+                    for(int i = 0; i < CALIBRATION_VALUES.size(); i++){
+                        int test = Math.abs(CALIBRATION_VALUES.get(i) - location);
+                        if( test < min){
+                            min = test;
+                            minLoc = i;
+                        }
+                    }
+                    view = viewsToResourceId.get(minLoc).first;
+                    Animation anim = new AlphaAnimation(0.0f, 1.0f);
+                    anim.setDuration(5); //You can manage the blinking time with this parameter
+                    anim.setStartOffset(20);
+                    anim.setRepeatMode(Animation.REVERSE);
+                    anim.setRepeatCount(Animation.INFINITE);
+                    view.startAnimation(anim);
+                    mPlayer = MediaPlayer.create(getActivity(), viewsToResourceId.get(minLoc).second);
+                    mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    mPlayer.start();
                 default:
                     break;
 
@@ -123,7 +89,28 @@ public class GameFragment extends Fragment {
         }
 
     });
-
+    private void blink(final View view){
+        final Handler handler = new Handler();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int timeToBlink = 500;    //in milissegunds
+                try{Thread.sleep(timeToBlink);}catch (Exception e) {e.printStackTrace();}
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        TextView txt = (TextView) view;
+                        if(txt.getVisibility() == View.VISIBLE){
+                            txt.setVisibility(View.INVISIBLE);
+                        }else{
+                            txt.setVisibility(View.VISIBLE);
+                        }
+                        blink(view);
+                    }
+                });
+            }
+        }).start();
+    }
     public GameFragment() {
         // Required empty public constructor
     }
@@ -135,15 +122,10 @@ public class GameFragment extends Fragment {
      * @return A new instance of fragment GameFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static GameFragment newInstance(int A, int B, int C, int D, int E, int F) {
+    public static GameFragment newInstance(ArrayList<Integer> calibValues) {
         GameFragment fragment = new GameFragment();
         Bundle args = new Bundle();
-        args.putInt(KEY_CALIBRATION_A, A);
-        args.putInt(KEY_CALIBRATION_B, B);
-        args.putInt(KEY_CALIBRATION_C, C);
-        args.putInt(KEY_CALIBRATION_D, D);
-        args.putInt(KEY_CALIBRATION_E, E);
-        args.putInt(KEY_CALIBRATION_F, F);
+        args.putIntegerArrayList(KEY_CALIBRATION, calibValues);
         fragment.setArguments(args);
         return fragment;
     }
@@ -153,13 +135,9 @@ public class GameFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             Bundle b = getArguments();
-            VALUE_CALIBRATION_A = b.getInt(KEY_CALIBRATION_A     , 14);
-            VALUE_CALIBRATION_B = b.getInt(KEY_CALIBRATION_B, 0);
-            VALUE_CALIBRATION_C = b.getInt(KEY_CALIBRATION_C     , -17);
-            VALUE_CALIBRATION_D = b.getInt(KEY_CALIBRATION_D, 0);
-            VALUE_CALIBRATION_E = b.getInt(KEY_CALIBRATION_E  , 0);
-            VALUE_CALIBRATION_F = b.getInt(KEY_CALIBRATION_F, 0);
+            CALIBRATION_VALUES = b.getIntegerArrayList(KEY_CALIBRATION);
         }
+
     }
     @Override
     public void onPause(){
@@ -171,7 +149,7 @@ public class GameFragment extends Fragment {
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
         getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         bindAudioRecord();
@@ -189,11 +167,22 @@ public class GameFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.game_fragment, container, false);
-    }
+        View view = inflater.inflate(R.layout.game_fragment, container, false);
+        A = view.findViewById(R.id.textA);
+        B = view.findViewById(R.id.textB);
+        C = view.findViewById(R.id.textC);
+        D = view.findViewById(R.id.textD);
+        E = view.findViewById(R.id.textE);
+        F = view.findViewById(R.id.textF);
+        viewsToResourceId = new ArrayList<>();
+        viewsToResourceId.add(Pair.create(A, R.raw.piano_a));
+        viewsToResourceId.add(Pair.create(B, R.raw.piano_b));
+        viewsToResourceId.add(Pair.create(C, R.raw.piano_c));
+        viewsToResourceId.add(Pair.create(D, R.raw.piano_d));
+        viewsToResourceId.add(Pair.create(E, R.raw.piano_e));
+        viewsToResourceId.add(Pair.create(F, R.raw.piano_f));
+        return view;
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
     }
 
     @Override
@@ -214,7 +203,8 @@ public class GameFragment extends Fragment {
     }
 
     public void stopAudioEngine(){
-        audioEngine.stop_engine();
+        if(audioEngine != null)
+            audioEngine.stop_engine();
     }
 
     public void bindAudioRecord(){

@@ -140,14 +140,22 @@ public class CalibrationFragment extends Fragment {
                 new View.OnClickListener(){
                     @Override
                     public void onClick(View v){
-
+                        ArrayList<Integer> calibVals = new ArrayList<>();
                         Intent data = new Intent();
-                        data.putExtra(GameFragment.KEY_CALIBRATION_A, thresholds.get("A"));
-                        data.putExtra(GameFragment.KEY_CALIBRATION_B, thresholds.get("B"));
-                        data.putExtra(GameFragment.KEY_CALIBRATION_C, thresholds.get("C"));
-                        data.putExtra(GameFragment.KEY_CALIBRATION_D, thresholds.get("D"));
-                        data.putExtra(GameFragment.KEY_CALIBRATION_E, thresholds.get("E"));
-                        data.putExtra(GameFragment.KEY_CALIBRATION_F, thresholds.get("F"));
+                        calibVals.add(thresholds.get("A"));
+                        calibVals.add(thresholds.get("B"));
+                        calibVals.add(thresholds.get("C"));
+                        calibVals.add(thresholds.get("D"));
+                        calibVals.add(thresholds.get("E"));
+                        calibVals.add(thresholds.get("F"));
+                        data.putExtra(GameFragment.KEY_CALIBRATION, calibVals);
+//                        data.putExtra(GameFragment.KEY_CALIBRATION_A, thresholds.get("A"));
+//                        data.putExtra(GameFragment.KEY_CALIBRATION_B, thresholds.get("B"));
+//                        data.putExtra(GameFragment.KEY_CALIBRATION_C, thresholds.get("C"));
+//                        data.putExtra(GameFragment.KEY_CALIBRATION_D, thresholds.get("D"));
+//                        data.putExtra(GameFragment.KEY_CALIBRATION_E, thresholds.get("E"));
+//                        data.putExtra(GameFragment.KEY_CALIBRATION_F, thresholds.get("F"));
+
                         Log.i(GameFragment.KEY_CALIBRATION_A,  Integer.toString(thresholds.get("A") ));
                         Log.i(GameFragment.KEY_CALIBRATION_B,   Integer.toString(thresholds.get("B") ));
                         Log.i(GameFragment.KEY_CALIBRATION_C, Integer.toString(thresholds.get("C") ) );
@@ -233,5 +241,6 @@ public class CalibrationFragment extends Fragment {
     public void stopAudioEngine(){
         if(audioEngine != null)
             audioEngine.stop_engine();
+        audioEngine = null;
     }
 }
