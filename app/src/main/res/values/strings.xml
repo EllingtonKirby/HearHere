@@ -6,4 +6,17 @@
     <string name="title_activity_main2">Main2Activity</string>
     <string name="calibrate">Calibrate</string>
     <string name="finish_calibration">Finish Calibration</string>
+
+    <string name="hello_blank_fragment">Welcome to HearHere!</string>
+    <string name="welcome_description">
+HearHere utilizes geometric features of sound to
+categorize a tapping sound within a grid. The geometric features
+are based on the Time Difference of Arrival (TDoA) of the sound
+between two microphones. By using this classification, any off the
+shelf phone with stereo recording capability can be made into a music
+producing device. The first step is to calibrate your surface. Imagine a set of six piano keys
+    laid out in front of your device, labeled A-F. HearHere transforms these positions into MIDI controllers!
+    After calibrating the six positions, play the HearHere game by tapping a location and hearing the corresponding sound! </string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 </resources>
