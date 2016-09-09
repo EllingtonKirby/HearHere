@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -26,7 +27,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements CalibrationFragment.OnSubmitCalibrationValuesListener{
-
+    public static String PREF_FILE_NAME = "HearHere_Preferences";
     private int A_CALIBRATION;
     private int B_CALIBRATION;
     private int C_CALIBRATION;
@@ -177,7 +178,10 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                 );
                 // Insert the fragment by replacing any existing fragment
                 FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(R.id.flContent, fragment);
+                fragmentTransaction.addToBackStack(null);
+                fragmentTransaction.commit();
             }
         }
     }
@@ -225,16 +229,39 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                     );
                 }
                 else{
+                    SharedPreferences sharedPreferences = getSharedPreferences(PREF_FILE_NAME, 0);
+                    String prefString = sharedPreferences.getString(GameFragment.KEY_CALIBRATION, "");
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    calibValues = new ArrayList<>();
                     builder.setTitle("Alert!!!!");
-                    builder.setMessage("Cannot begin HearHere until locations are calibrated!");
-                    builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+                    if(prefString.equals("")) {
+                        builder.setMessage("Cannot begin HearHere until locations are calibrated!");
+                        builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        });
+                        builder.create().show();
+                        fragmentClass = CalibrationFragment.class;
+                    }
+                    else{
+                        String[] exploded = prefString.split(",");
+                        for(String val : exploded){
+                            calibValues.add(Integer.parseInt(val));
                         }
-                    });
-                    builder.create().show();
-                    fragmentClass = CalibrationFragment.class;
+                        builder.setMessage("Starting HearHere with calibration values from last setting");
+                        builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                        fragmentClass = GameFragment.class;
+                        fragment = GameFragment.newInstance(
+                                calibValues
+                        );
+                    }
+
                 }
                 break;
             case R.id.nav_third_fragment:

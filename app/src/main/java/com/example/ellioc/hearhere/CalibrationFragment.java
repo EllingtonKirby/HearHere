@@ -3,6 +3,7 @@ package com.example.ellioc.hearhere;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +48,8 @@ public class CalibrationFragment extends Fragment {
     Spinner spinner = null;
     private Button finishCalibrate = null;
     private Button startCalibrate = null;
+    private SharedPreferences preferences;
+
 
     private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>(){{
         put("A", new ArrayList<Integer>());
@@ -163,6 +166,17 @@ public class CalibrationFragment extends Fragment {
                         Log.i(GameFragment.KEY_CALIBRATION_E,   Integer.toString(thresholds.get("E") )   );
                         Log.i(GameFragment.KEY_CALIBRATION_F, Integer.toString(thresholds.get("F") ) );
 
+                        preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
+                        String preference = "";
+                        for(int val : calibVals){
+                            preference += Integer.toString(val);
+                            if(val != calibVals.get(calibVals.size() - 1)){
+                                preference += ",";
+                            }
+                        }
+                        SharedPreferences.Editor prefEditor = preferences.edit();
+                        prefEditor.putString(GameFragment.KEY_CALIBRATION, preference);
+                        prefEditor.apply();
 
                         onSubmitCalibrationValuesListener.onSubmitCalibrationValues(
                                 CLASSIFICATION,

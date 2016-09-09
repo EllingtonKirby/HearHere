@@ -73,10 +73,10 @@ public class GameFragment extends Fragment {
                     }
                     view = viewsToResourceId.get(minLoc).first;
                     Animation anim = new AlphaAnimation(0.0f, 1.0f);
-                    anim.setDuration(5); //You can manage the blinking time with this parameter
+                    anim.setDuration(50); //You can manage the blinking time with this parameter
                     anim.setStartOffset(20);
                     anim.setRepeatMode(Animation.REVERSE);
-                    anim.setRepeatCount(Animation.INFINITE);
+                    anim.setRepeatCount(5);
                     view.startAnimation(anim);
                     mPlayer = MediaPlayer.create(getActivity(), viewsToResourceId.get(minLoc).second);
                     mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
