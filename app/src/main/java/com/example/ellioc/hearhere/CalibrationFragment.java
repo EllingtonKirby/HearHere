@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,7 +43,7 @@ public class CalibrationFragment extends Fragment {
             "C",
             "D",
             "E",
-            "F" };
+            "F"};
     AudioEngine audioEngine = null;
     ArrayAdapter<CharSequence> adapter = null;
     Spinner spinner = null;
@@ -51,7 +52,7 @@ public class CalibrationFragment extends Fragment {
     private SharedPreferences preferences;
 
 
-    private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>(){{
+    private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>() {{
         put("A", new ArrayList<Integer>());
         put("B", new ArrayList<Integer>());
         put("C", new ArrayList<Integer>());
@@ -61,25 +62,25 @@ public class CalibrationFragment extends Fragment {
     }};
 
     private static HashMap<String, Integer> thresholds = new HashMap<String, Integer>() {{
-        put("A",0);
-        put("B",0);
-        put("C",0);
-        put("D",0);
-        put("E",0);
+        put("A", 0);
+        put("B", 0);
+        put("C", 0);
+        put("D", 0);
+        put("E", 0);
         put("F", 0);
     }};
 
-    Handler mhandle = new Handler(new Handler.Callback(){
+    Handler mhandle = new Handler(new Handler.Callback() {
         @Override
-        public boolean handleMessage(Message msg){
-            switch (msg.what){
+        public boolean handleMessage(Message msg) {
+            switch (msg.what) {
                 case CLASSIFICATION:
                     int location = msg.arg1;
                     Log.i("Calibration: ", "returned value is " + location);
                     String selectedSection = spinner.getSelectedItem().toString();
                     ArrayList<Integer> selectedCalibrationValues = calibrationValues.get(selectedSection);
                     selectedCalibrationValues.add(location);
-                    if(selectedCalibrationValues.size() >= 5){
+                    if (selectedCalibrationValues.size() >= 5) {
                         stopAudioEngine();
                         updateThresholds();
                     }
@@ -91,7 +92,7 @@ public class CalibrationFragment extends Fragment {
 
     OnSubmitCalibrationValuesListener onSubmitCalibrationValuesListener;
 
-    public interface OnSubmitCalibrationValuesListener{
+    public interface OnSubmitCalibrationValuesListener {
         void onSubmitCalibrationValues(int requestCode, int resultCode, Intent data);
     }
 
@@ -102,6 +103,7 @@ public class CalibrationFragment extends Fragment {
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
+     *
      * @return A new instance of fragment CalibrationFragment.
      */
     public static CalibrationFragment newInstance() {
@@ -140,9 +142,9 @@ public class CalibrationFragment extends Fragment {
         assert finishCalibrate != null;
         finishCalibrate.setVisibility(View.INVISIBLE);
         finishCalibrate.setOnClickListener(
-                new View.OnClickListener(){
+                new View.OnClickListener() {
                     @Override
-                    public void onClick(View v){
+                    public void onClick(View v) {
                         ArrayList<Integer> calibVals = new ArrayList<>();
                         Intent data = new Intent();
                         calibVals.add(thresholds.get("A"));
@@ -159,21 +161,16 @@ public class CalibrationFragment extends Fragment {
 //                        data.putExtra(GameFragment.KEY_CALIBRATION_E, thresholds.get("E"));
 //                        data.putExtra(GameFragment.KEY_CALIBRATION_F, thresholds.get("F"));
 
-                        Log.i(GameFragment.KEY_CALIBRATION_A,  Integer.toString(thresholds.get("A") ));
-                        Log.i(GameFragment.KEY_CALIBRATION_B,   Integer.toString(thresholds.get("B") ));
-                        Log.i(GameFragment.KEY_CALIBRATION_C, Integer.toString(thresholds.get("C") ) );
-                        Log.i(GameFragment.KEY_CALIBRATION_D,  Integer.toString(thresholds.get("D") )  );
-                        Log.i(GameFragment.KEY_CALIBRATION_E,   Integer.toString(thresholds.get("E") )   );
-                        Log.i(GameFragment.KEY_CALIBRATION_F, Integer.toString(thresholds.get("F") ) );
+                        Log.i(GameFragment.KEY_CALIBRATION_A, Integer.toString(thresholds.get("A")));
+                        Log.i(GameFragment.KEY_CALIBRATION_B, Integer.toString(thresholds.get("B")));
+                        Log.i(GameFragment.KEY_CALIBRATION_C, Integer.toString(thresholds.get("C")));
+                        Log.i(GameFragment.KEY_CALIBRATION_D, Integer.toString(thresholds.get("D")));
+                        Log.i(GameFragment.KEY_CALIBRATION_E, Integer.toString(thresholds.get("E")));
+                        Log.i(GameFragment.KEY_CALIBRATION_F, Integer.toString(thresholds.get("F")));
 
                         preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
-                        String preference = "";
-                        for(int val : calibVals){
-                            preference += Integer.toString(val);
-                            if(val != calibVals.get(calibVals.size() - 1)){
-                                preference += ",";
-                            }
-                        }
+                        String preference = TextUtils.join(",", calibVals);
+
                         SharedPreferences.Editor prefEditor = preferences.edit();
                         prefEditor.putString(GameFragment.KEY_CALIBRATION, preference);
                         prefEditor.apply();
@@ -209,6 +206,12 @@ public class CalibrationFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         onSubmitCalibrationValuesListener = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        startAudioEngine();
     }
 
     public void onPause(){
