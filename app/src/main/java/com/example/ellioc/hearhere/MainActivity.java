@@ -241,7 +241,6 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                             public void onClick(DialogInterface dialog, int which) {
                             }
                         });
-                        builder.create().show();
                         fragmentClass = CalibrationFragment.class;
                     }
                     else{
@@ -261,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                                 calibValues
                         );
                     }
-
+                    builder.create().show();
                 }
                 break;
             case R.id.nav_third_fragment:
