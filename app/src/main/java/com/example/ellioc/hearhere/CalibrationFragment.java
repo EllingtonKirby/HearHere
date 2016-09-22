@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.PermissionChecker;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,7 +51,6 @@ public class CalibrationFragment extends Fragment {
     private Button finishCalibrate = null;
     private Button startCalibrate = null;
     private Button recalibrateButton = null;
-    private SharedPreferences preferences;
 
 
     private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>() {{
@@ -128,6 +128,16 @@ public class CalibrationFragment extends Fragment {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         assert spinner != null;
         spinner.setAdapter(adapter);
+        this.setupButtons(view);
+
+        return view;
+    }
+
+    /**
+     * Set up the buttons and add click listeners to the buttons for use in the
+     * onCreateView method.
+     */
+    private void setupButtons(View view) {
         startCalibrate = (Button) view.findViewById(R.id.startCalibration);
         assert startCalibrate != null;
         startCalibrate.setOnClickListener(
@@ -139,14 +149,7 @@ public class CalibrationFragment extends Fragment {
                     }
                 }
         );
-        recalibrateButton = (Button) view.findViewById(R.id.recalibrate);
-        recalibrateButton.setVisibility(View.INVISIBLE);
-        recalibrateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-            }
-        });
         finishCalibrate = (Button) view.findViewById(R.id.finishCalibration);
         assert finishCalibrate != null;
         finishCalibrate.setVisibility(View.INVISIBLE);
@@ -177,7 +180,7 @@ public class CalibrationFragment extends Fragment {
                         Log.i(GameFragment.KEY_CALIBRATION_E, Integer.toString(thresholds.get("E")));
                         Log.i(GameFragment.KEY_CALIBRATION_F, Integer.toString(thresholds.get("F")));
 
-                        preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
+                        SharedPreferences preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
                         String preference = TextUtils.join(",", calibVals);
 
                         SharedPreferences.Editor prefEditor = preferences.edit();
@@ -191,9 +194,26 @@ public class CalibrationFragment extends Fragment {
                     }
                 }
         );
+        String calibrationValuesString = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0)
+                                                .getString(GameFragment.KEY_CALIBRATION, "");
 
-        return view;
+        recalibrateButton = (Button) view.findViewById(R.id.recalibrate);
+        recalibrateButton.setVisibility(View.INVISIBLE);
+        if(!calibrationValuesString.equals("")) {
+            startCalibrate.setVisibility(View.INVISIBLE);
+            recalibrateButton.setVisibility(View.VISIBLE);
+            recalibrateButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    calibrationValues.get(spinner.getSelectedItem().toString()).clear();
+                    startAudioEngine();
+                    recalibrateButton.setClickable(false);
+                }
+            });
+        }
+
     }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -237,7 +257,7 @@ public class CalibrationFragment extends Fragment {
         stopAudioEngine();
     }
 
-    public int getMedian(ArrayList<Integer> values){
+    private int getMedian(ArrayList<Integer> values) {
         int middle = values.size() / 2;
         if(values.size() % 2 == 1){
             return values.get(middle);
@@ -247,19 +267,20 @@ public class CalibrationFragment extends Fragment {
         }
     }
 
-    public void updateThresholds(){
+    private void updateThresholds() {
         String selectedSection = spinner.getSelectedItem().toString();
-        adapter.remove((CharSequence)spinner.getSelectedItem());
+        adapter.remove((CharSequence) spinner.getSelectedItem());
         Collections.sort(calibrationValues.get(selectedSection));
         thresholds.put(selectedSection, getMedian(calibrationValues.get(selectedSection)));
         Toast.makeText(getActivity().getApplicationContext(), "Calibration complete for " + selectedSection,
                 Toast.LENGTH_SHORT).show();
-        if(adapter.isEmpty()){
+        if (adapter.isEmpty()) {
             finishCalibrate.setVisibility(View.VISIBLE);
             startCalibrate.setVisibility(View.INVISIBLE);
-        }
-        else{
+            recalibrateButton.setVisibility(View.INVISIBLE);
+        } else {
             startCalibrate.setClickable(true);
+            recalibrateButton.setClickable(true);
         }
     }
 
