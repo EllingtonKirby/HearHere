@@ -240,7 +240,7 @@ public class CalibrationFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(!startCalibrate.isClickable()){
+        if(!startCalibrate.isClickable() || !recalibrateButton.isClickable()) {
             startAudioEngine();
         }
     }
