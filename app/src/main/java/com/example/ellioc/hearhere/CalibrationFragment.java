@@ -9,12 +9,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.PermissionChecker;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -42,16 +45,18 @@ public class CalibrationFragment extends Fragment {
             "C",
             "D",
             "E",
-            "F" };
+            "F"};
     AudioEngine audioEngine = null;
     ArrayAdapter<CharSequence> adapter = null;
     Spinner spinner = null;
     private Button finishCalibrate = null;
     private Button startCalibrate = null;
-    private SharedPreferences preferences;
+    private Button recalibrateButton = null;
+    private ProgressBar calibrateProgress = null;
+    private int mProgressStatus = 0;
 
 
-    private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>(){{
+    private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>() {{
         put("A", new ArrayList<Integer>());
         put("B", new ArrayList<Integer>());
         put("C", new ArrayList<Integer>());
@@ -61,28 +66,31 @@ public class CalibrationFragment extends Fragment {
     }};
 
     private static HashMap<String, Integer> thresholds = new HashMap<String, Integer>() {{
-        put("A",0);
-        put("B",0);
-        put("C",0);
-        put("D",0);
-        put("E",0);
+        put("A", 0);
+        put("B", 0);
+        put("C", 0);
+        put("D", 0);
+        put("E", 0);
         put("F", 0);
     }};
 
-    Handler mhandle = new Handler(new Handler.Callback(){
+    Handler mhandle = new Handler(new Handler.Callback() {
         @Override
-        public boolean handleMessage(Message msg){
-            switch (msg.what){
+        public boolean handleMessage(Message msg) {
+            switch (msg.what) {
                 case CLASSIFICATION:
                     int location = msg.arg1;
                     Log.i("Calibration: ", "returned value is " + location);
                     String selectedSection = spinner.getSelectedItem().toString();
                     ArrayList<Integer> selectedCalibrationValues = calibrationValues.get(selectedSection);
+                    mProgressStatus++;
                     selectedCalibrationValues.add(location);
-                    if(selectedCalibrationValues.size() >= 5){
+                    if (selectedCalibrationValues.size() >= 5) {
                         stopAudioEngine();
                         updateThresholds();
+                        mProgressStatus = 0;
                     }
+                    calibrateProgress.setProgress(mProgressStatus);
                     break;
             }
             return true;
@@ -91,7 +99,7 @@ public class CalibrationFragment extends Fragment {
 
     OnSubmitCalibrationValuesListener onSubmitCalibrationValuesListener;
 
-    public interface OnSubmitCalibrationValuesListener{
+    public interface OnSubmitCalibrationValuesListener {
         void onSubmitCalibrationValues(int requestCode, int resultCode, Intent data);
     }
 
@@ -102,6 +110,7 @@ public class CalibrationFragment extends Fragment {
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
+     *
      * @return A new instance of fragment CalibrationFragment.
      */
     public static CalibrationFragment newInstance() {
@@ -125,6 +134,19 @@ public class CalibrationFragment extends Fragment {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         assert spinner != null;
         spinner.setAdapter(adapter);
+        this.setupButtons(view);
+
+        calibrateProgress = (ProgressBar) view.findViewById(R.id.progressBar);
+        calibrateProgress.setProgress(mProgressStatus);
+
+        return view;
+    }
+
+    /**
+     * Set up the buttons and add click listeners to the buttons for use in the
+     * onCreateView method.
+     */
+    private void setupButtons(View view) {
         startCalibrate = (Button) view.findViewById(R.id.startCalibration);
         assert startCalibrate != null;
         startCalibrate.setOnClickListener(
@@ -136,13 +158,14 @@ public class CalibrationFragment extends Fragment {
                     }
                 }
         );
+
         finishCalibrate = (Button) view.findViewById(R.id.finishCalibration);
         assert finishCalibrate != null;
         finishCalibrate.setVisibility(View.INVISIBLE);
         finishCalibrate.setOnClickListener(
-                new View.OnClickListener(){
+                new View.OnClickListener() {
                     @Override
-                    public void onClick(View v){
+                    public void onClick(View v) {
                         ArrayList<Integer> calibVals = new ArrayList<>();
                         Intent data = new Intent();
                         calibVals.add(thresholds.get("A"));
@@ -159,21 +182,16 @@ public class CalibrationFragment extends Fragment {
 //                        data.putExtra(GameFragment.KEY_CALIBRATION_E, thresholds.get("E"));
 //                        data.putExtra(GameFragment.KEY_CALIBRATION_F, thresholds.get("F"));
 
-                        Log.i(GameFragment.KEY_CALIBRATION_A,  Integer.toString(thresholds.get("A") ));
-                        Log.i(GameFragment.KEY_CALIBRATION_B,   Integer.toString(thresholds.get("B") ));
-                        Log.i(GameFragment.KEY_CALIBRATION_C, Integer.toString(thresholds.get("C") ) );
-                        Log.i(GameFragment.KEY_CALIBRATION_D,  Integer.toString(thresholds.get("D") )  );
-                        Log.i(GameFragment.KEY_CALIBRATION_E,   Integer.toString(thresholds.get("E") )   );
-                        Log.i(GameFragment.KEY_CALIBRATION_F, Integer.toString(thresholds.get("F") ) );
+                        Log.i(GameFragment.KEY_CALIBRATION_A, Integer.toString(thresholds.get("A")));
+                        Log.i(GameFragment.KEY_CALIBRATION_B, Integer.toString(thresholds.get("B")));
+                        Log.i(GameFragment.KEY_CALIBRATION_C, Integer.toString(thresholds.get("C")));
+                        Log.i(GameFragment.KEY_CALIBRATION_D, Integer.toString(thresholds.get("D")));
+                        Log.i(GameFragment.KEY_CALIBRATION_E, Integer.toString(thresholds.get("E")));
+                        Log.i(GameFragment.KEY_CALIBRATION_F, Integer.toString(thresholds.get("F")));
 
-                        preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
-                        String preference = "";
-                        for(int val : calibVals){
-                            preference += Integer.toString(val);
-                            if(val != calibVals.get(calibVals.size() - 1)){
-                                preference += ",";
-                            }
-                        }
+                        SharedPreferences preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
+                        String preference = TextUtils.join(",", calibVals);
+
                         SharedPreferences.Editor prefEditor = preferences.edit();
                         prefEditor.putString(GameFragment.KEY_CALIBRATION, preference);
                         prefEditor.apply();
@@ -185,9 +203,26 @@ public class CalibrationFragment extends Fragment {
                     }
                 }
         );
+        String calibrationValuesString = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0)
+                                                .getString(GameFragment.KEY_CALIBRATION, "");
 
-        return view;
+        recalibrateButton = (Button) view.findViewById(R.id.recalibrate);
+        recalibrateButton.setVisibility(View.INVISIBLE);
+        if(!calibrationValuesString.equals("")) {
+            startCalibrate.setVisibility(View.INVISIBLE);
+            recalibrateButton.setVisibility(View.VISIBLE);
+            recalibrateButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    calibrationValues.get(spinner.getSelectedItem().toString()).clear();
+                    startAudioEngine();
+                    recalibrateButton.setClickable(false);
+                }
+            });
+        }
+
     }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -211,17 +246,27 @@ public class CalibrationFragment extends Fragment {
         onSubmitCalibrationValuesListener = null;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(!startCalibrate.isClickable() || !recalibrateButton.isClickable()) {
+            startAudioEngine();
+        }
+    }
+
+    @Override
     public void onPause(){
         super.onPause();
         stopAudioEngine();
     }
 
+    @Override
     public void onStop(){
         super.onStop();
         stopAudioEngine();
     }
 
-    public int getMedian(ArrayList<Integer> values){
+    private int getMedian(ArrayList<Integer> values) {
         int middle = values.size() / 2;
         if(values.size() % 2 == 1){
             return values.get(middle);
@@ -231,19 +276,20 @@ public class CalibrationFragment extends Fragment {
         }
     }
 
-    public void updateThresholds(){
+    private void updateThresholds() {
         String selectedSection = spinner.getSelectedItem().toString();
-        adapter.remove((CharSequence)spinner.getSelectedItem());
+        adapter.remove((CharSequence) spinner.getSelectedItem());
         Collections.sort(calibrationValues.get(selectedSection));
         thresholds.put(selectedSection, getMedian(calibrationValues.get(selectedSection)));
         Toast.makeText(getActivity().getApplicationContext(), "Calibration complete for " + selectedSection,
                 Toast.LENGTH_SHORT).show();
-        if(adapter.isEmpty()){
+        if (adapter.isEmpty()) {
             finishCalibrate.setVisibility(View.VISIBLE);
             startCalibrate.setVisibility(View.INVISIBLE);
-        }
-        else{
+            recalibrateButton.setVisibility(View.INVISIBLE);
+        } else {
             startCalibrate.setClickable(true);
+            recalibrateButton.setClickable(true);
         }
     }
 

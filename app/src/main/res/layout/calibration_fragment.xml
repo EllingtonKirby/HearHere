@@ -28,9 +28,31 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/recalibrate"
+            android:id="@+id/recalibrate"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/finish_calibration"
             android:id="@+id/finishCalibration"
             android:layout_below="@+id/startCalibration"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="42dp" />
+
+
+
+        <ProgressBar
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/progressBar"
+            android:layout_below="@+id/finishCalibration"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="24dp"
+            android:max="5"/>
+
     </RelativeLayout>

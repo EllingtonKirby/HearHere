@@ -216,19 +216,13 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
     public void selectDrawerItem(MenuItem menuItem) {
         // Create a new fragment and specify the fragment to show based on nav item clicked
         Fragment fragment = null;
-        Class fragmentClass;
+        Class fragmentClass = null;
         switch(menuItem.getItemId()) {
             case R.id.nav_first_fragment:
                 fragmentClass = CalibrationFragment.class;
                 break;
             case R.id.nav_second_fragment:
-                if(IS_CALIBRATED) {
-                    fragmentClass = GameFragment.class;
-                    fragment = GameFragment.newInstance(
-                            calibValues
-                    );
-                }
-                else{
+                if(!IS_CALIBRATED){
                     SharedPreferences sharedPreferences = getSharedPreferences(PREF_FILE_NAME, 0);
                     String prefString = sharedPreferences.getString(GameFragment.KEY_CALIBRATION, "");
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -241,7 +235,6 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                             public void onClick(DialogInterface dialog, int which) {
                             }
                         });
-                        builder.create().show();
                         fragmentClass = CalibrationFragment.class;
                     }
                     else{
@@ -257,11 +250,11 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                             }
                         });
                         fragmentClass = GameFragment.class;
-                        fragment = GameFragment.newInstance(
-                                calibValues
-                        );
                     }
-
+                    builder.create().show();
+                }
+                else {
+                    fragmentClass = GameFragment.class;
                 }
                 break;
             case R.id.nav_third_fragment:
@@ -274,6 +267,9 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
         try {
             if(fragmentClass != GameFragment.class) {
                 fragment = (Fragment) fragmentClass.newInstance();
+            }
+            else {
+                fragment = GameFragment.newInstance(calibValues);
             }
         } catch (Exception e) {
             e.printStackTrace();

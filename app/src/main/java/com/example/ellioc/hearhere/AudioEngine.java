@@ -204,10 +204,11 @@ public class AudioEngine extends Thread {
         }catch (Exception e){
             e.printStackTrace();
         }
-        if(recordInstance != null){
-            recordInstance.stop();
-            recordInstance.release();
-            recordInstance = null;
+        finally {
+            if(recordInstance != null &&recordInstance.getState() == AudioRecord.STATE_INITIALIZED) {
+                recordInstance.stop();
+                recordInstance.release();
+            }
         }
     }
 }
