@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -51,6 +52,8 @@ public class CalibrationFragment extends Fragment {
     private Button finishCalibrate = null;
     private Button startCalibrate = null;
     private Button recalibrateButton = null;
+    private ProgressBar calibrateProgress = null;
+    private int mProgressStatus = 0;
 
 
     private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>() {{
@@ -80,11 +83,14 @@ public class CalibrationFragment extends Fragment {
                     Log.i("Calibration: ", "returned value is " + location);
                     String selectedSection = spinner.getSelectedItem().toString();
                     ArrayList<Integer> selectedCalibrationValues = calibrationValues.get(selectedSection);
+                    mProgressStatus++;
                     selectedCalibrationValues.add(location);
                     if (selectedCalibrationValues.size() >= 5) {
                         stopAudioEngine();
                         updateThresholds();
+                        mProgressStatus = 0;
                     }
+                    calibrateProgress.setProgress(mProgressStatus);
                     break;
             }
             return true;
@@ -129,6 +135,9 @@ public class CalibrationFragment extends Fragment {
         assert spinner != null;
         spinner.setAdapter(adapter);
         this.setupButtons(view);
+
+        calibrateProgress = (ProgressBar) view.findViewById(R.id.progressBar);
+        calibrateProgress.setProgress(mProgressStatus);
 
         return view;
     }

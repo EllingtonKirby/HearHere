@@ -253,6 +253,9 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                     }
                     builder.create().show();
                 }
+                else {
+                    fragmentClass = GameFragment.class;
+                }
                 break;
             case R.id.nav_third_fragment:
                 fragmentClass = WelcomeScreenFragment.class;
