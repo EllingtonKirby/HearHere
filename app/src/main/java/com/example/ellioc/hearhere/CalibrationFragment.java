@@ -49,6 +49,7 @@ public class CalibrationFragment extends Fragment {
     Spinner spinner = null;
     private Button finishCalibrate = null;
     private Button startCalibrate = null;
+    private Button recalibrateButton = null;
     private SharedPreferences preferences;
 
 
@@ -138,6 +139,14 @@ public class CalibrationFragment extends Fragment {
                     }
                 }
         );
+        recalibrateButton = (Button) view.findViewById(R.id.recalibrate);
+        recalibrateButton.setVisibility(View.INVISIBLE);
+        recalibrateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
         finishCalibrate = (Button) view.findViewById(R.id.finishCalibration);
         assert finishCalibrate != null;
         finishCalibrate.setVisibility(View.INVISIBLE);
@@ -211,14 +220,18 @@ public class CalibrationFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        startAudioEngine();
+        if(!startCalibrate.isClickable()){
+            startAudioEngine();
+        }
     }
 
+    @Override
     public void onPause(){
         super.onPause();
         stopAudioEngine();
     }
 
+    @Override
     public void onStop(){
         super.onStop();
         stopAudioEngine();

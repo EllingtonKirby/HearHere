@@ -6,6 +6,7 @@
     <string name="title_activity_main2">Main2Activity</string>
     <string name="calibrate">Calibrate</string>
     <string name="finish_calibration">Finish Calibration</string>
+    <string name="recalibrate">Recalibrate</string>
 
     <string name="hello_blank_fragment">Welcome to HearHere!</string>
     <string name="welcome_description">
