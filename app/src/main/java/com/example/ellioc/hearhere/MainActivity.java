@@ -228,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     calibValues = new ArrayList<>();
                     builder.setTitle("Alert!!!!");
-                    if(prefString.equals("")) {
+                    if(prefString.contains(Integer.toString(Integer.MAX_VALUE))) {
                         builder.setMessage("Cannot begin HearHere until locations are calibrated!");
                         builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
                             @Override
