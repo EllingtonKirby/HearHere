@@ -2,14 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_third_fragment"
+            android:title="Welcome Screen"
+            android:checked="true"/>
+        <item
             android:id="@+id/nav_first_fragment"
             android:title="Calibration" />
         <item
             android:id="@+id/nav_second_fragment"
             android:title="HearHere" />
-        <item
-            android:id="@+id/nav_third_fragment"
-            android:title="Welcome Screen"
-            android:checked="true"/>
+
     </group>
 </menu>

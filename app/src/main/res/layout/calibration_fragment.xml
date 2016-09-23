@@ -28,14 +28,6 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/recalibrate"
-            android:id="@+id/recalibrate"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:text="@string/finish_calibration"
             android:id="@+id/finishCalibration"
             android:layout_below="@+id/startCalibration"

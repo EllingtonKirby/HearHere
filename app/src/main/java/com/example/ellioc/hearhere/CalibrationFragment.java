@@ -9,12 +9,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.PermissionChecker;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -45,16 +45,14 @@ public class CalibrationFragment extends Fragment {
             "C",
             "D",
             "E",
-            "F"};
+            "F"
+    };
     AudioEngine audioEngine = null;
     ArrayAdapter<CharSequence> adapter = null;
     Spinner spinner = null;
-    private Button finishCalibrate = null;
-    private Button startCalibrate = null;
-    private Button recalibrateButton = null;
-    private ProgressBar calibrateProgress = null;
-    private int mProgressStatus = 0;
-
+    private Button finishCalibrateButton = null;
+    private Button calibrateButton = null;
+    private ProgressBar calibrateProgressBar = null;
 
     private static HashMap<String, ArrayList<Integer>> calibrationValues = new HashMap<String, ArrayList<Integer>>() {{
         put("A", new ArrayList<Integer>());
@@ -65,13 +63,15 @@ public class CalibrationFragment extends Fragment {
         put("F", new ArrayList<Integer>());
     }};
 
+    //The thresholds will contain the max integer value to denote calibration did not occur
+    //because 0 can be an actual threshold.
     private static HashMap<String, Integer> thresholds = new HashMap<String, Integer>() {{
-        put("A", 0);
-        put("B", 0);
-        put("C", 0);
-        put("D", 0);
-        put("E", 0);
-        put("F", 0);
+        put("A", Integer.MAX_VALUE);
+        put("B", Integer.MAX_VALUE);
+        put("C", Integer.MAX_VALUE);
+        put("D", Integer.MAX_VALUE);
+        put("E", Integer.MAX_VALUE);
+        put("F", Integer.MAX_VALUE);
     }};
 
     Handler mhandle = new Handler(new Handler.Callback() {
@@ -83,14 +83,18 @@ public class CalibrationFragment extends Fragment {
                     Log.i("Calibration: ", "returned value is " + location);
                     String selectedSection = spinner.getSelectedItem().toString();
                     ArrayList<Integer> selectedCalibrationValues = calibrationValues.get(selectedSection);
-                    mProgressStatus++;
+                    calibrateProgressBar.incrementProgressBy(1);
                     selectedCalibrationValues.add(location);
                     if (selectedCalibrationValues.size() >= 5) {
                         stopAudioEngine();
                         updateThresholds();
-                        mProgressStatus = 0;
+                        spinner.setSelection((spinner.getSelectedItemPosition() + 1) % adapter.getCount());
+                        calibrateButton.setEnabled(true);
+                        calibrateProgressBar.setProgress(0);
+                        if(isCalibrated()) {
+                            finishCalibrateButton.setEnabled(true);
+                        }
                     }
-                    calibrateProgress.setProgress(mProgressStatus);
                     break;
             }
             return true;
@@ -120,6 +124,17 @@ public class CalibrationFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String calibratedValues = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0)
+                                            .getString(GameFragment.KEY_CALIBRATION, "");
+
+        //Update thresholds from shared preferences if previously calibrated.
+        if(!calibratedValues.equals("")) {
+            String[] values = calibratedValues.split(",");
+            for(int i = 0; i < values.length; ++i) {
+                thresholds.put(charSequences[i].toString(), Integer.parseInt(values[i]));
+                Log.i("Calibration Fragment", "Threshold at " + charSequences[i] + ": " + values[i]);
+            }
+        }
     }
 
     @Override
@@ -134,10 +149,28 @@ public class CalibrationFragment extends Fragment {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         assert spinner != null;
         spinner.setAdapter(adapter);
+        //Set the button name depending on if the selected spinner item has already been calibrated or not.
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                CharSequence selectedPos = (CharSequence) parent.getItemAtPosition(position);
+                if(thresholds.get(selectedPos.toString()) == Integer.MAX_VALUE) {
+                    calibrateButton.setText(R.string.calibrate);
+                }
+                else {
+                    calibrateButton.setText(R.string.recalibrate);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        spinner.setSelection(0);
         this.setupButtons(view);
 
-        calibrateProgress = (ProgressBar) view.findViewById(R.id.progressBar);
-        calibrateProgress.setProgress(mProgressStatus);
+        calibrateProgressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+        calibrateProgressBar.setProgress(0);
 
         return view;
     }
@@ -147,40 +180,44 @@ public class CalibrationFragment extends Fragment {
      * onCreateView method.
      */
     private void setupButtons(View view) {
-        startCalibrate = (Button) view.findViewById(R.id.startCalibration);
-        assert startCalibrate != null;
-        startCalibrate.setOnClickListener(
+        calibrateButton = (Button) view.findViewById(R.id.startCalibration);
+        assert calibrateButton != null;
+        if(thresholds.get(spinner.getSelectedItem().toString()) == Integer.MAX_VALUE) {
+            calibrateButton.setText(R.string.calibrate);
+        }
+        else {
+            calibrateButton.setText(R.string.recalibrate);
+        }
+        //Whenever the calibrate or recalibrate button is pressed, override the previous
+        //values that were stored for the selection.
+        calibrateButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        calibrationValues.get(spinner.getSelectedItem().toString()).clear();
                         startAudioEngine();
-                        startCalibrate.setClickable(false);
+                        calibrateButton.setEnabled(false);
+                        finishCalibrateButton.setEnabled(false);
                     }
                 }
         );
 
-        finishCalibrate = (Button) view.findViewById(R.id.finishCalibration);
-        assert finishCalibrate != null;
-        finishCalibrate.setVisibility(View.INVISIBLE);
-        finishCalibrate.setOnClickListener(
+        finishCalibrateButton = (Button) view.findViewById(R.id.finishCalibration);
+        assert finishCalibrateButton != null;
+        if(!isCalibrated()) {
+            finishCalibrateButton.setEnabled(false);
+        }
+        finishCalibrateButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         ArrayList<Integer> calibVals = new ArrayList<>();
                         Intent data = new Intent();
-                        calibVals.add(thresholds.get("A"));
-                        calibVals.add(thresholds.get("B"));
-                        calibVals.add(thresholds.get("C"));
-                        calibVals.add(thresholds.get("D"));
-                        calibVals.add(thresholds.get("E"));
-                        calibVals.add(thresholds.get("F"));
+
+                        for(CharSequence selection : charSequences) {
+                            calibVals.add(thresholds.get(selection.toString()));
+                        }
                         data.putExtra(GameFragment.KEY_CALIBRATION, calibVals);
-//                        data.putExtra(GameFragment.KEY_CALIBRATION_A, thresholds.get("A"));
-//                        data.putExtra(GameFragment.KEY_CALIBRATION_B, thresholds.get("B"));
-//                        data.putExtra(GameFragment.KEY_CALIBRATION_C, thresholds.get("C"));
-//                        data.putExtra(GameFragment.KEY_CALIBRATION_D, thresholds.get("D"));
-//                        data.putExtra(GameFragment.KEY_CALIBRATION_E, thresholds.get("E"));
-//                        data.putExtra(GameFragment.KEY_CALIBRATION_F, thresholds.get("F"));
 
                         Log.i(GameFragment.KEY_CALIBRATION_A, Integer.toString(thresholds.get("A")));
                         Log.i(GameFragment.KEY_CALIBRATION_B, Integer.toString(thresholds.get("B")));
@@ -190,10 +227,10 @@ public class CalibrationFragment extends Fragment {
                         Log.i(GameFragment.KEY_CALIBRATION_F, Integer.toString(thresholds.get("F")));
 
                         SharedPreferences preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
-                        String preference = TextUtils.join(",", calibVals);
+                        String calibratedValues = TextUtils.join(",", calibVals);
 
                         SharedPreferences.Editor prefEditor = preferences.edit();
-                        prefEditor.putString(GameFragment.KEY_CALIBRATION, preference);
+                        prefEditor.putString(GameFragment.KEY_CALIBRATION, calibratedValues);
                         prefEditor.apply();
 
                         onSubmitCalibrationValuesListener.onSubmitCalibrationValues(
@@ -203,23 +240,6 @@ public class CalibrationFragment extends Fragment {
                     }
                 }
         );
-        String calibrationValuesString = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0)
-                                                .getString(GameFragment.KEY_CALIBRATION, "");
-
-        recalibrateButton = (Button) view.findViewById(R.id.recalibrate);
-        recalibrateButton.setVisibility(View.INVISIBLE);
-        if(!calibrationValuesString.equals("")) {
-            startCalibrate.setVisibility(View.INVISIBLE);
-            recalibrateButton.setVisibility(View.VISIBLE);
-            recalibrateButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    calibrationValues.get(spinner.getSelectedItem().toString()).clear();
-                    startAudioEngine();
-                    recalibrateButton.setClickable(false);
-                }
-            });
-        }
 
     }
 
@@ -249,7 +269,7 @@ public class CalibrationFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(!startCalibrate.isClickable() || !recalibrateButton.isClickable()) {
+        if(!calibrateButton.isEnabled()) {
             startAudioEngine();
         }
     }
@@ -264,6 +284,14 @@ public class CalibrationFragment extends Fragment {
     public void onStop(){
         super.onStop();
         stopAudioEngine();
+        ArrayList<Integer> calibVals = new ArrayList<>();
+        for(CharSequence selection : charSequences) {
+            calibVals.add(thresholds.get(selection.toString()));
+        }
+        String currentCalibratedValues = TextUtils.join(",", calibVals);
+        SharedPreferences preferences = getActivity().getSharedPreferences(MainActivity.PREF_FILE_NAME, 0);
+        preferences.edit().putString(GameFragment.KEY_CALIBRATION, currentCalibratedValues).apply();
+        Log.i("Calibration Fragment", "onStop");
     }
 
     private int getMedian(ArrayList<Integer> values) {
@@ -276,21 +304,28 @@ public class CalibrationFragment extends Fragment {
         }
     }
 
+    /**
+     * Update the thresholds for the currently selected spinner item.
+     */
     private void updateThresholds() {
         String selectedSection = spinner.getSelectedItem().toString();
-        adapter.remove((CharSequence) spinner.getSelectedItem());
         Collections.sort(calibrationValues.get(selectedSection));
         thresholds.put(selectedSection, getMedian(calibrationValues.get(selectedSection)));
         Toast.makeText(getActivity().getApplicationContext(), "Calibration complete for " + selectedSection,
                 Toast.LENGTH_SHORT).show();
-        if (adapter.isEmpty()) {
-            finishCalibrate.setVisibility(View.VISIBLE);
-            startCalibrate.setVisibility(View.INVISIBLE);
-            recalibrateButton.setVisibility(View.INVISIBLE);
-        } else {
-            startCalibrate.setClickable(true);
-            recalibrateButton.setClickable(true);
+    }
+
+    /**
+     * Indicate whether all sections are calibrated.
+     * @return true if all sections are calibrated, false otherwise.
+     */
+    private boolean isCalibrated() {
+        for(CharSequence section : charSequences) {
+            if(thresholds.get(section.toString()) == Integer.MAX_VALUE) {
+                return false;
+            }
         }
+        return true;
     }
 
     public void startAudioEngine(){
