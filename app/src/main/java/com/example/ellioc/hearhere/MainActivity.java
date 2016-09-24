@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                 fragment = GameFragment.newInstance(calibValues);
             }
             else if(fragmentClass == SynthFragment.class){
-                fragment = GameFragment.newInstance(calibValues);
+                fragment = SynthFragment.newInstance(calibValues);
             }
             else {
                 fragment = (Fragment) fragmentClass.newInstance();

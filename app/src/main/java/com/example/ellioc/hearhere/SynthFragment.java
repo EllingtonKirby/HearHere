@@ -89,7 +89,7 @@ public class SynthFragment extends Fragment {
         super.onPause();
         audioEngine.stop_engine();
     }
-    
+
     @Override
     public void onStop() {
         super.onStop();
