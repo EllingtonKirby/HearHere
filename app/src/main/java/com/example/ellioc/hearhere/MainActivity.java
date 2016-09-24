@@ -260,16 +260,22 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
             case R.id.nav_third_fragment:
                 fragmentClass = WelcomeScreenFragment.class;
                 break;
+            case R.id.nav_synth_fragment:
+                fragmentClass = SynthFragment.class;
+                break;
             default:
                 fragmentClass = WelcomeScreenFragment.class;
         }
 
         try {
-            if(fragmentClass != GameFragment.class) {
-                fragment = (Fragment) fragmentClass.newInstance();
+            if(fragmentClass == GameFragment.class) {
+                fragment = GameFragment.newInstance(calibValues);
+            }
+            else if(fragmentClass == SynthFragment.class){
+                fragment = GameFragment.newInstance(calibValues);
             }
             else {
-                fragment = GameFragment.newInstance(calibValues);
+                fragment = (Fragment) fragmentClass.newInstance();
             }
         } catch (Exception e) {
             e.printStackTrace();
