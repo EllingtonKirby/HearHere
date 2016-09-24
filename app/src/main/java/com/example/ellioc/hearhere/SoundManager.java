@@ -35,7 +35,7 @@ public class SoundManager {
     /**
      * Create a Sound Pool object that will manage the sound resources, completing operations such
      * as loading and playing sounds.
-     * @return
+     * @return SoundPool object containing the number of streams indicated in the argument.
      */
     private SoundPool buildSoundManager(int maxStreams) {
         SoundPool sp;

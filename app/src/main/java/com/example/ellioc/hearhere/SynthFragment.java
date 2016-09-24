@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +69,6 @@ public class SynthFragment extends Fragment {
         soundManager = new SoundManager(3);
         soundManager.loadSoundManager(getActivity(), getResources().obtainTypedArray(R.array.sound_files));
         soundCategorizer = new Categorizer(calibrationValues);
-        audioEngine = new AudioEngine(mhandle);
     }
 
     @Override
@@ -81,19 +81,30 @@ public class SynthFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        audioEngine.start_engine();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        audioEngine.stop_engine();
+        if(audioEngine != null) {
+            this.stopAudioEngine();
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
         soundManager.release();
+    }
+
+    private void startAudioEngine(){
+        audioEngine = new AudioEngine(mhandle);
+        audioEngine.start_engine();
+    }
+
+    private void stopAudioEngine(){
+        if(audioEngine != null)
+            audioEngine.stop_engine();
     }
 
 }
