@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
     public void selectDrawerItem(MenuItem menuItem) {
         // Create a new fragment and specify the fragment to show based on nav item clicked
         Fragment fragment = null;
-        Class fragmentClass = null;
+        Class fragmentClass;
         switch(menuItem.getItemId()) {
             case R.id.nav_first_fragment:
                 fragmentClass = CalibrationFragment.class;

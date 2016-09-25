@@ -20,4 +20,8 @@ producing device. The first step is to calibrate your surface. Imagine a set of 
     After calibrating the six positions, play the HearHere game by tapping a location and hearing the corresponding sound! </string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
+    <string name="record_on">Stop Recording</string>
+    <string name="record_off">Record</string>
+    <string name="play">Play</string>
+    <string name="sample">Sample</string>
 </resources>

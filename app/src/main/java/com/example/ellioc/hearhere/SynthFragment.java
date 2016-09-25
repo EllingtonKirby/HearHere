@@ -8,6 +8,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.ToggleButton;
 
 import java.util.ArrayList;
 
@@ -17,29 +20,13 @@ import java.util.ArrayList;
  * Use the {@link SynthFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SynthFragment extends Fragment {
+public class SynthFragment extends Fragment implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private ArrayList<Integer> calibrationValues;
     private SoundManager soundManager;
     private Categorizer soundCategorizer;
+    private Handler audioHandler;
     private AudioEngine audioEngine;
-
     private final int CLASSIFICATION = 1;
-
-    /**
-     * Handler to respond to values obtained from the AudioEngine.
-     */
-    private Handler mhandle = new Handler(
-            new Handler.Callback() {
-                @Override
-                public boolean handleMessage(Message msg) {
-                    if(msg.what == CLASSIFICATION) {
-                        soundManager.addSoundToSequence(soundCategorizer.categorizeSound(msg.arg1));
-                    }
-                    return true;
-                }
-            }
-    );
-
 
     public SynthFragment() {
         // Required empty public constructor
@@ -75,7 +62,12 @@ public class SynthFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_synth, container, false);
+        View v = inflater.inflate(R.layout.fragment_synth, container, false);
+        ToggleButton recordButton = (ToggleButton) v.findViewById(R.id.record_button);
+        recordButton.setOnCheckedChangeListener(this);
+        Button playButton = (Button) v.findViewById(R.id.play_button);
+        playButton.setOnClickListener(this);
+        return v;
     }
 
     @Override
@@ -86,9 +78,6 @@ public class SynthFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        if(audioEngine != null) {
-            this.stopAudioEngine();
-        }
     }
 
     @Override
@@ -97,14 +86,48 @@ public class SynthFragment extends Fragment {
         soundManager.release();
     }
 
-    private void startAudioEngine(){
-        audioEngine = new AudioEngine(mhandle);
-        audioEngine.start_engine();
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.play_button:
+                soundManager.playSequence();
+                break;
+            default:
+                break;
+        }
     }
 
-    private void stopAudioEngine(){
-        if(audioEngine != null)
-            audioEngine.stop_engine();
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch(buttonView.getId()) {
+            case R.id.record_button:
+                if(isChecked) {
+                    audioHandler = new Handler(new Handler.Callback() {
+                        @Override
+                        public boolean handleMessage(Message msg) {
+                            switch(msg.what) {
+                                case CLASSIFICATION:
+                                    soundManager.playSound(msg.arg1);
+                                    soundManager.addSoundToSequence(soundCategorizer.categorizeSound(msg.arg1));
+                                    return true;
+                                default :
+                                    break;
+                            }
+                            return false;
+                        }
+                    });
+                    audioEngine = new AudioEngine(audioHandler);
+                    audioEngine.start_engine();
+                }
+                else {
+                    if(audioEngine != null) {
+                        audioEngine.stop_engine();
+                    }
+                }
+                break;
+            default:
+                break;
+        }
     }
 
 }

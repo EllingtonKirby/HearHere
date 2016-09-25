@@ -77,7 +77,7 @@ public class SoundManager {
      * Play the sound loaded onto the given location.
      * @param soundIDIndex Index of the sound to play.
      */
-    private void playSound(int soundIDIndex) {
+    public void playSound(int soundIDIndex) {
         soundManager.play(soundIds.get(soundIDIndex), 1, 1, 1, 0, 1);
     }
 
