@@ -45,7 +45,7 @@
         tools:layout_constraintBottom_creator="1"
         app:layout_constraintRight_toRightOf="@+id/soundboard" />
 
-    <GridLayout
+    <android.support.v7.widget.GridLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginEnd="16dp"
@@ -59,16 +59,16 @@
         app:layout_constraintBottom_toTopOf="@+id/control_separator"
         android:layout_marginBottom="8dp"
         android:id="@+id/soundboard"
-        android:columnCount="3"
-        android:rowCount="2"
+        app:columnCount="3"
+        app:rowCount="2"
         app:layout_constraintVertical_bias="0.65999997">
 
         <ImageView
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_gravity="fill"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill"
             app:srcCompat="@android:color/holo_green_light"
             android:id="@+id/topleft"
             android:adjustViewBounds="false"
@@ -77,9 +77,9 @@
         <ImageView
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_gravity="fill"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill"
             app:srcCompat="@android:color/holo_blue_dark"
             android:id="@+id/topmiddle"
             android:adjustViewBounds="false"
@@ -88,9 +88,9 @@
         <ImageView
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_gravity="fill"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill"
             app:srcCompat="@android:color/holo_purple"
             android:id="@+id/topright"
             android:adjustViewBounds="false"
@@ -99,9 +99,9 @@
         <ImageView
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_gravity="fill"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill"
             app:srcCompat="?android:attr/colorActivatedHighlight"
             android:id="@+id/bottomleft"
             android:adjustViewBounds="false"
@@ -110,9 +110,9 @@
         <ImageView
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_gravity="fill"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill"
             app:srcCompat="@android:color/holo_red_dark"
             android:id="@+id/bottomright"
             android:adjustViewBounds="false"
@@ -121,14 +121,14 @@
         <ImageView
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_gravity="fill"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill"
             app:srcCompat="@android:color/white"
             android:id="@+id/bottommiddle"
             android:adjustViewBounds="false"
             android:contentDescription="@string/sound6"/>
 
-    </GridLayout>
+    </android.support.v7.widget.GridLayout>
 
 </android.support.constraint.ConstraintLayout>

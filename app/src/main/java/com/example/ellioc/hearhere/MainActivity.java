@@ -261,7 +261,40 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
                 fragmentClass = WelcomeScreenFragment.class;
                 break;
             case R.id.nav_synth_fragment:
-                fragmentClass = SynthFragment.class;
+                if(!IS_CALIBRATED){
+                    SharedPreferences sharedPreferences = getSharedPreferences(PREF_FILE_NAME, 0);
+                    String prefString = sharedPreferences.getString(GameFragment.KEY_CALIBRATION, "");
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    calibValues = new ArrayList<>();
+                    builder.setTitle("Alert!!!!");
+                    if(prefString.contains(Integer.toString(Integer.MAX_VALUE))) {
+                        builder.setMessage("Cannot begin HearHere until locations are calibrated!");
+                        builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        });
+                        fragmentClass = CalibrationFragment.class;
+                    }
+                    else{
+                        String[] exploded = prefString.split(",");
+                        for(String val : exploded){
+                            calibValues.add(Integer.parseInt(val));
+                        }
+                        builder.setMessage("Starting HearHere with calibration values from last setting");
+                        builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                        fragmentClass = SynthFragment.class;
+                    }
+                    builder.create().show();
+                }
+                else {
+                    fragmentClass = SynthFragment.class;
+                }
                 break;
             default:
                 fragmentClass = WelcomeScreenFragment.class;

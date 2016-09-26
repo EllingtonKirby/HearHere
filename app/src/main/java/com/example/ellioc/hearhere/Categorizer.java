@@ -1,5 +1,7 @@
 package com.example.ellioc.hearhere;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 /**
@@ -14,7 +16,8 @@ public class Categorizer {
     }
 
     public Categorizer(ArrayList<Integer> calibrationValues) {
-        this.calibrationValues = calibrationValues;
+        this.calibrationValues = new ArrayList<>(calibrationValues);
+        Log.i("Categorizer", "Values Initialized");
     }
 
     /**

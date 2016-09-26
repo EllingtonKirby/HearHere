@@ -1,5 +1,7 @@
 package com.example.ellioc.hearhere;
 
+import android.animation.AnimatorInflater;
+import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -10,6 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.GridLayout;
+import android.widget.GridView;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
@@ -26,7 +30,14 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
     private Categorizer soundCategorizer;
     private Handler audioHandler;
     private AudioEngine audioEngine;
+
     private final int CLASSIFICATION = 1;
+
+    //Fragment Views
+    private GridLayout soundGridLayout;
+    private ToggleButton recordButton;
+    private Button playButton;
+    private ObjectAnimator anim;
 
     public SynthFragment() {
         // Required empty public constructor
@@ -53,7 +64,7 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
         if (getArguments() != null) {
             calibrationValues = getArguments().getIntegerArrayList(GameFragment.KEY_CALIBRATION);
         }
-        soundManager = new SoundManager(3);
+        soundManager = new SoundManager();
         soundManager.loadSoundManager(getActivity(), getResources().obtainTypedArray(R.array.sound_files));
         soundCategorizer = new Categorizer(calibrationValues);
     }
@@ -63,10 +74,18 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_synth, container, false);
-        ToggleButton recordButton = (ToggleButton) v.findViewById(R.id.record_button);
+
+        //Find and inflate all views in the fragment
+        recordButton = (ToggleButton) v.findViewById(R.id.record_button);
+        playButton = (Button) v.findViewById(R.id.play_button);
+        soundGridLayout = (GridLayout) v.findViewById(R.id.soundboard);
+
+        //Set listeners and initialize behaviors for views
         recordButton.setOnCheckedChangeListener(this);
-        Button playButton = (Button) v.findViewById(R.id.play_button);
         playButton.setOnClickListener(this);
+        anim = (ObjectAnimator) AnimatorInflater.loadAnimator(
+                getContext(), R.animator.sound_board_blinker
+        );
         return v;
     }
 
@@ -102,13 +121,19 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
         switch(buttonView.getId()) {
             case R.id.record_button:
                 if(isChecked) {
+                    soundManager.resetSoundSequence();
                     audioHandler = new Handler(new Handler.Callback() {
                         @Override
                         public boolean handleMessage(Message msg) {
                             switch(msg.what) {
                                 case CLASSIFICATION:
-                                    soundManager.playSound(msg.arg1);
-                                    soundManager.addSoundToSequence(soundCategorizer.categorizeSound(msg.arg1));
+                                    Integer soundLocation = soundCategorizer.categorizeSound(msg.arg1);
+                                    soundManager.playSound(soundLocation);
+                                    soundManager.addSoundToSequence(
+                                            soundCategorizer.categorizeSound(soundLocation)
+                                    );
+                                    anim.setTarget(soundGridLayout.getChildAt(soundLocation));
+                                    anim.start();
                                     return true;
                                 default :
                                     break;

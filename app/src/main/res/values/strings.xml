@@ -24,4 +24,11 @@ producing device. The first step is to calibrate your surface. Imagine a set of 
     <string name="record_off">Record</string>
     <string name="play">Play</string>
     <string name="sample">Sample</string>
+
+    <string name="sound1">User Sound 1</string>
+    <string name="sound2">User Sound 2</string>
+    <string name="sound3">User Sound 3</string>
+    <string name="sound4">User Sound 4</string>
+    <string name="sound5">User Sound 5</string>
+    <string name="sound6">User Sound 6</string>
 </resources>
