@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/control_separator"
         android:orientation="horizontal"
-        tools:layout_editor_absoluteY="261dp"
+        tools:layout_editor_absoluteY="303dp"
         tools:layout_editor_absoluteX="0dp"
         app:layout_constraintGuide_percent="0.7521614" />
 
@@ -31,7 +31,9 @@
         app:layout_constraintVertical_bias="0.18"
         android:fontFamily="sans-serif-medium"
         android:textSize="14sp"
-        android:checked="false" />
+        android:checked="false"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp" />
 
     <Button
         android:text="@string/play"
@@ -43,25 +45,22 @@
         app:layout_constraintVertical_bias="1.0"
         tools:layout_constraintTop_creator="1"
         tools:layout_constraintBottom_creator="1"
-        app:layout_constraintRight_toRightOf="@+id/soundboard" />
+        app:layout_constraintRight_toRightOf="@+id/soundboard"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp" />
 
     <GridLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginEnd="16dp"
         app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginRight="16dp"
-        android:layout_marginStart="16dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/control_separator"
-        android:layout_marginBottom="8dp"
         android:id="@+id/soundboard"
         android:columnCount="3"
         android:rowCount="2"
-        app:layout_constraintVertical_bias="0.65999997">
+        app:layout_constraintVertical_bias="0.65999997"
+        android:layout_marginBottom="16dp">
 
         <ImageView
             android:layout_width="0px"
@@ -124,7 +123,7 @@
             android:layout_columnWeight="1"
             android:layout_rowWeight="1"
             android:layout_gravity="fill"
-            app:srcCompat="@android:color/white"
+            app:srcCompat="@android:color/darker_gray"
             android:id="@+id/bottommiddle"
             android:adjustViewBounds="false"
             android:contentDescription="@string/sound6"/>

@@ -27,7 +27,6 @@ public class AudioEngine extends Thread {
         Log.i("Audio Engine", "Audio Engine Constructor");
         this.isRunning = false;
         this.mhandle = mhandle;
-//        isExternalStorageWritable();
         recordInstance = findAudioRecord();
         NoiseSuppressor.create(recordInstance.getAudioSessionId());
         AcousticEchoCanceler.create(recordInstance.getAudioSessionId());
@@ -102,15 +101,6 @@ public class AudioEngine extends Thread {
 
     public void run(){
         try{
-//            File root = getSoundStorageDir();
-//            File toWrite = new File(root, "RecordedAudio");
-//
-//            FileWriter writer = new FileWriter(toWrite);
-//            BufferedWriter bufferedWriter = new BufferedWriter(writer);
-//            ArrayList<String> leftList = new ArrayList<>();
-//            ArrayList<String> rightList = new ArrayList<>();
-//            ArrayList<String> corrList = new ArrayList<>();
-
             final int READ_2MS = 96;
             recordInstance.startRecording();
 
@@ -148,11 +138,9 @@ public class AudioEngine extends Thread {
                     if(foundPeak){
                         for(int i = 0; i < buff.length; i++){
                             if(i % 2 == 0){
-//                                left[i/2] = buff[i];
                                 leftVariable[i/2] = buff[i];
                             }
                             else{
-//                                right[i/2] = buff[i];
                                 rightVariable[i/2] = buff[i];
                             }
                         }
@@ -165,10 +153,6 @@ public class AudioEngine extends Thread {
                                 rightVariable[i/2] = validationBuffer[i - buff.length];
                             }
                         }
-//                        for(int i = 0; i < leftVariable.length; i++){
-//                            leftList.add(String.valueOf(leftVariable[i]));
-//                            rightList.add(String.valueOf(rightVariable[i]));
-//                        }
 
                         double[] xCorrFull = DSP.xcorr(leftVariable, rightVariable);
                         double maxFull = xCorrFull[0];
@@ -195,12 +179,6 @@ public class AudioEngine extends Thread {
                     }
                 }
             }
-//            int j = 0;
-//            for(int i = 0; i < leftList.size() / 2; i++){
-//                bufferedWriter.write(leftList.get(i) + "\t" + rightList.get(i));
-//                bufferedWriter.newLine();
-//            }
-//            bufferedWriter.close();
         }catch (Exception e){
             e.printStackTrace();
         }

@@ -7,8 +7,10 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class that manages and simplifies the operations of the SoundPool since complex sound
@@ -20,7 +22,8 @@ import java.util.ArrayList;
 public class SoundManager {
     private SoundPool soundManager;
     private ArrayList<Integer> soundIds;
-    private ArrayDeque<Integer> soundSequence;
+    private ArrayList<Integer> soundSequence;
+    private ScheduledExecutorService scheduler;
 
     public SoundManager() {
         this(1);
@@ -29,7 +32,8 @@ public class SoundManager {
     public SoundManager(int maxStreams) {
         soundManager = buildSoundManager(maxStreams);
         soundIds = new ArrayList<>();
-        soundSequence = new ArrayDeque<>();
+        soundSequence = new ArrayList<>();
+        scheduler = Executors.newSingleThreadScheduledExecutor();
     }
 
     /**
@@ -65,11 +69,19 @@ public class SoundManager {
     }
 
     /**
-     * Play the stored sequence of sounds back to the user.
+     * Play the stored sequence of sounds back to the user with the specified delay in between
+     * each sound.
+     * @param timeDelayInMillis Delay in milliseconds between each sound.
      */
-    public void playSequence() {
-        for(Integer soundIDIndex : soundSequence) {
-            this.playSound(soundIDIndex);
+    public void playSequence(int timeDelayInMillis) {
+        for(int i = 0; i < soundSequence.size(); ++i){
+            final int sequenceIndex = i;
+            scheduler.schedule(new Runnable(){
+                @Override
+                public void run() {
+                    playSound(soundSequence.get(sequenceIndex));
+                }
+            }, timeDelayInMillis * i, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -94,7 +106,8 @@ public class SoundManager {
      * @return Sonund ID Index of the removed sound.
      */
     public Integer removeSoundFromSequence() {
-        return this.soundSequence.removeLast();
+
+        return this.soundSequence.remove(soundSequence.size() - 1);
     }
 
     /**
@@ -123,7 +136,9 @@ public class SoundManager {
      * when the SoundManager will not be used in order to prevent memory leaks.
      */
     public void release() {
-        soundManager.release();
+        if(soundManager != null) {
+            soundManager.release();
+        }
         soundManager = null;
     }
 }

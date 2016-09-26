@@ -28,12 +28,6 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements CalibrationFragment.OnSubmitCalibrationValuesListener{
     public static String PREF_FILE_NAME = "HearHere_Preferences";
-    private int A_CALIBRATION;
-    private int B_CALIBRATION;
-    private int C_CALIBRATION;
-    private int D_CALIBRATION;
-    private int E_CALIBRATION;
-    private int F_CALIBRATION;
     private ArrayList<Integer> calibValues;
 
     final int PERMISSIONS_RECORD_AUDIO = 1;
@@ -69,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
         if(!hasRecordAudioPermission()) {
             requestRecordAudioPermission();
         }
-
+        setupDrawerContent(nvDrawer);
         if (findViewById(R.id.flContent) != null) {
 
             // However, if we're being restored from a previous state,
@@ -93,7 +87,6 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
             fragmentTransaction.commit();
             // Setup drawer view
         }
-        setupDrawerContent(nvDrawer);
     }
 
 
@@ -165,12 +158,6 @@ public class MainActivity extends AppCompatActivity implements CalibrationFragme
     public void onSubmitCalibrationValues(int requestCode, int resultCode, Intent data){
         if(requestCode == CALIBRATION_REQUEST) {
             if (resultCode == RESULT_OK) {
-//                A_CALIBRATION  = data.getIntExtra("left_calibration", 14);
-//                B_CALIBRATION  = data.getIntExtra("top_mid_calibration", 0);
-//                C_CALIBRATION  = data.getIntExtra("right_calibration", -17);
-//                D_CALIBRATION  = data.getIntExtra("bot_left_calibration", 0);
-//                E_CALIBRATION  = data.getIntExtra("bot_mid_calibration", 0);
-//                F_CALIBRATION  = data.getIntExtra("bot_right_calibration", 0);
                 IS_CALIBRATED = true;
                 calibValues = data.getIntegerArrayListExtra(GameFragment.KEY_CALIBRATION);
                 GameFragment fragment = GameFragment.newInstance(

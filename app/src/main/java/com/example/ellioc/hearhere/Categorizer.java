@@ -17,7 +17,7 @@ public class Categorizer {
 
     public Categorizer(ArrayList<Integer> calibrationValues) {
         this.calibrationValues = new ArrayList<>(calibrationValues);
-        Log.i("Categorizer", "Values Initialized");
+
     }
 
     /**

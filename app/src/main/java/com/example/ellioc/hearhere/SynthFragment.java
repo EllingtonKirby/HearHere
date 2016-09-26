@@ -2,18 +2,18 @@ package com.example.ellioc.hearhere;
 
 import android.animation.AnimatorInflater;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.GridLayout;
-import android.widget.GridView;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
 
     private final int CLASSIFICATION = 1;
 
-    //Fragment Views
+    //Fragment views
     private GridLayout soundGridLayout;
     private ToggleButton recordButton;
     private Button playButton;
@@ -106,10 +106,15 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public void onClick(View v) {
         switch(v.getId()) {
             case R.id.play_button:
-                soundManager.playSequence();
+                soundManager.playSequence(1200);
                 break;
             default:
                 break;
@@ -129,9 +134,7 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
                                 case CLASSIFICATION:
                                     Integer soundLocation = soundCategorizer.categorizeSound(msg.arg1);
                                     soundManager.playSound(soundLocation);
-                                    soundManager.addSoundToSequence(
-                                            soundCategorizer.categorizeSound(soundLocation)
-                                    );
+                                    soundManager.addSoundToSequence(soundLocation);
                                     anim.setTarget(soundGridLayout.getChildAt(soundLocation));
                                     anim.start();
                                     return true;
@@ -141,6 +144,8 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
                             return false;
                         }
                     });
+                    //Prevent user from playing sounds while recording new sounds.
+                    playButton.setEnabled(false);
                     audioEngine = new AudioEngine(audioHandler);
                     audioEngine.start_engine();
                 }
@@ -148,10 +153,22 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
                     if(audioEngine != null) {
                         audioEngine.stop_engine();
                     }
+                    playButton.setEnabled(true);
                 }
                 break;
             default:
                 break;
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if(isVisibleToUser) {
+            Activity mainActivity = getActivity();
+            if(mainActivity != null) {
+                mainActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            }
         }
     }
 
