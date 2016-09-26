@@ -81,6 +81,14 @@ public class GameFragment extends Fragment {
                     mPlayer = MediaPlayer.create(getActivity(), viewsToResourceId.get(minLoc).second);
                     mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                     mPlayer.start();
+                    mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            mp.stop();
+                            mp.release();
+                            mp = null;
+                        }
+                    });
                 default:
                     break;
 

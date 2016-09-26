@@ -12,5 +12,9 @@
             android:id="@+id/nav_second_fragment"
             android:title="HearHere" />
 
+        <item
+            android:id="@+id/nav_synth_fragment"
+            android:title="Synthesize" />
+
     </group>
 </menu>

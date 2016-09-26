@@ -6,4 +6,13 @@
         <item>Bottom Left</item>
         <item>Bottom Right</item>
     </string-array>
+
+    <string-array name="sound_files">
+        <item>@raw/piano_a</item>
+        <item>@raw/piano_b</item>
+        <item>@raw/piano_c</item>
+        <item>@raw/piano_d</item>
+        <item>@raw/piano_e</item>
+        <item>@raw/piano_f</item>
+    </string-array>
 </resources>
