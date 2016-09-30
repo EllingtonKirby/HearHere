@@ -5,6 +5,7 @@ import android.media.MediaRecorder;
 import android.media.audiofx.AcousticEchoCanceler;
 import android.os.Environment;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 import android.os.Handler;
 import android.media.audiofx.NoiseSuppressor;
@@ -174,8 +175,10 @@ public class AudioEngine extends Thread {
                         int CLASSIFICATION = 1;
                         msg = mhandle.obtainMessage(CLASSIFICATION);
                         msg.arg1 = locationFull;
+                        msg.obj = SystemClock.currentThreadTimeMillis();
+                        Log.i("AudioEngine", "Location: " + locationFull);
                         mhandle.sendMessage(msg);
-                        Thread.sleep(1200);
+                        //Thread.sleep(1200);
                     }
                 }
             }

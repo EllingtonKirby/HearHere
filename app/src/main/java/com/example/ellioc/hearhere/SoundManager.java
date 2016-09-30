@@ -6,6 +6,7 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
@@ -23,6 +24,7 @@ public class SoundManager {
     private SoundPool soundManager;
     private ArrayList<Integer> soundIds;
     private ArrayList<Integer> soundSequence;
+    private ArrayList<Long> soundDelays;
     private ScheduledExecutorService scheduler;
 
     public SoundManager() {
@@ -34,6 +36,7 @@ public class SoundManager {
         soundIds = new ArrayList<>();
         soundSequence = new ArrayList<>();
         scheduler = Executors.newSingleThreadScheduledExecutor();
+        soundDelays = new ArrayList<>();
     }
 
     /**
@@ -71,17 +74,17 @@ public class SoundManager {
     /**
      * Play the stored sequence of sounds back to the user with the specified delay in between
      * each sound.
-     * @param timeDelayInMillis Delay in milliseconds between each sound.
      */
-    public void playSequence(int timeDelayInMillis) {
+    public void playSequence() {
         for(int i = 0; i < soundSequence.size(); ++i){
+            Log.i("Sound Manager", "Delays: " + soundDelays.get(i));
             final int sequenceIndex = i;
             scheduler.schedule(new Runnable(){
                 @Override
                 public void run() {
                     playSound(soundSequence.get(sequenceIndex));
                 }
-            }, timeDelayInMillis * i, TimeUnit.MILLISECONDS);
+            }, soundDelays.get(i), TimeUnit.MILLISECONDS);
         }
     }
 
@@ -98,6 +101,7 @@ public class SoundManager {
      */
     public void resetSoundSequence() {
         this.soundSequence.clear();
+        this.soundDelays.clear();
     }
 
     /**
@@ -127,8 +131,9 @@ public class SoundManager {
      * Add sound to the sequence of sounds to play back to the user.
      * @param soundIDIndex Index of the sound to store.
      */
-    public void addSoundToSequence(int soundIDIndex) {
+    public void addSoundToSequence(int soundIDIndex, long soundDelay) {
         soundSequence.add(soundIDIndex);
+        soundDelays.add(soundDelay);
     }
 
     /**

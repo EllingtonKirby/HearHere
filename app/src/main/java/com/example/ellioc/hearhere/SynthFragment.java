@@ -114,7 +114,7 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
     public void onClick(View v) {
         switch(v.getId()) {
             case R.id.play_button:
-                soundManager.playSequence(1200);
+                soundManager.playSequence();
                 break;
             default:
                 break;
@@ -133,8 +133,9 @@ public class SynthFragment extends Fragment implements View.OnClickListener, Com
                             switch(msg.what) {
                                 case CLASSIFICATION:
                                     Integer soundLocation = soundCategorizer.categorizeSound(msg.arg1);
+                                    Long soundDelay = (Long) msg.obj;
                                     soundManager.playSound(soundLocation);
-                                    soundManager.addSoundToSequence(soundLocation);
+                                    soundManager.addSoundToSequence(soundLocation, soundDelay);
                                     anim.setTarget(soundGridLayout.getChildAt(soundLocation));
                                     anim.start();
                                     return true;
