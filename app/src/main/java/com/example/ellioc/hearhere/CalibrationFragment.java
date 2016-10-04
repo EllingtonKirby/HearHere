@@ -81,6 +81,8 @@ public class CalibrationFragment extends Fragment {
                 case CLASSIFICATION:
                     int location = msg.arg1;
                     Log.i("Calibration: ", "returned value is " + location);
+                    Toast.makeText(getActivity().getApplicationContext(), "Last TDoA " + Integer.toString(location),
+                            Toast.LENGTH_SHORT).show();
                     String selectedSection = spinner.getSelectedItem().toString();
                     ArrayList<Integer> selectedCalibrationValues = calibrationValues.get(selectedSection);
                     calibrateProgressBar.incrementProgressBy(1);
